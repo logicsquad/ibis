@@ -5,7 +5,7 @@
 
   <groupId>net.logicsquad</groupId>
   <artifactId>ibis</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
 
   <name>Ibis</name>
   <description>A simple spelling checker for Java applications.</description>
