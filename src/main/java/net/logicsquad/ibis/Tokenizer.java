@@ -1,41 +1,40 @@
 package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-public class Tokenizer implements Iterable<String> {
+public class Tokenizer {
 	private final BreakIterator breakIterator = BreakIterator.getWordInstance();
 
-	private final List<String> list = new ArrayList<>();
+	private final String text;
+
+	private int start;
+
+	private int end;
 
 	public Tokenizer(String text) {
-		extractWords(text, breakIterator);
+		this.text = text;
+		breakIterator.setText(text);
+		start = breakIterator.first();
+		end = breakIterator.next();
 		return;
 	}
 
-	private void extractWords(String target, BreakIterator wordIterator) {
-		wordIterator.setText(target);
-		int start = wordIterator.first();
-		int end = wordIterator.next();
-		while (end != BreakIterator.DONE) {
-			String word = target.substring(start, end);
-			if (Character.isLetterOrDigit(word.charAt(0))) {
-				list.add(word);
-			}
-			start = end;
-			end = wordIterator.next();
+	public boolean hasNext() {
+		return end != BreakIterator.DONE;
+	}
+
+	private String candidateNext() {
+		String word = text.substring(start, end);
+		start = end;
+		end = breakIterator.next();
+		return word;
+	}
+
+	public String next() {
+		String word = candidateNext();
+		while (!Character.isLetterOrDigit(word.charAt(0))) {
+			word = candidateNext();
 		}
-		return;
-	}
-
-	@Override
-	public Iterator<String> iterator() {
-		return list.iterator();
-	}
-
-	List<String> list() {
-		return list;
+		return word;
 	}
 }
