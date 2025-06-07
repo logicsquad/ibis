@@ -25,7 +25,7 @@ public class TokenizerTest {
 	private static final List<Word> EXPECTED_3 = List.of(Word.of("Now", 0), Word.of("is", 4), Word.of("the", 7), Word.of("time", 11));
 
 	@Test
-	public void test1() {
+	public void tokenizerRemovesPunct() {
 		Tokenizer tokenizer = new Tokenizer(TEST_1);
 		for (int i = 0; i < EXPECTED_1.size(); i++) {
 			assertEquals(EXPECTED_1.get(i), tokenizer.next().text());
@@ -34,7 +34,7 @@ public class TokenizerTest {
 	}
 
 	@Test
-	public void test2() {
+	public void tokenizerHandlesSomeSpecialCases() {
 		Tokenizer tokenizer = new Tokenizer(TEST_2);
 		for (int i = 0; i < EXPECTED_2.size(); i++) {
 			assertEquals(EXPECTED_2.get(i), tokenizer.next().text());
@@ -43,7 +43,7 @@ public class TokenizerTest {
 	}
 
 	@Test
-	public void test3() {
+	public void tokenizerRecordsExpectedIndexes() {
 		Tokenizer tokenizer = new Tokenizer(TEST_3);
 		for (int i = 0; i < EXPECTED_3.size(); i++) {
 			assertEquals(EXPECTED_3.get(i), tokenizer.next());
