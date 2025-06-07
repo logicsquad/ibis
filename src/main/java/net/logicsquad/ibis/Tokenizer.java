@@ -44,7 +44,7 @@ public class Tokenizer {
 		}
 		if (word.text().contains("—")) {
 			int i = word.text().indexOf('—');
-			queue.add(Word.of(word.text().substring(i + 1), i + 1));
+			queue.add(Word.of(word.text().substring(i + 1), word.start() + i + 1));
 			return Word.of(word.text().substring(0, i), word.start());
 		} else if ("e.g".equals(word.text())) {
 			if ('.' == text.charAt(end - 1)) {

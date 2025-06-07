@@ -24,29 +24,48 @@ public class TokenizerTest {
 
 	private static final List<Word> EXPECTED_3 = List.of(Word.of("Now", 0), Word.of("is", 4), Word.of("the", 7), Word.of("time", 11));
 
+	private static final String TEST_4 = "Here is my—em dash";
+
+	private static final List<Word> EXPECTED_4 = List.of(Word.of("Here", 0), Word.of("is", 5), Word.of("my", 8), Word.of("em", 11), Word.of("dash", 14));
+
+	private static final String TEST_5 = "Now e.g. red one.";
+
+	private static final List<Word> EXPECTED_5 = List.of(Word.of("Now", 0), Word.of("e.g.", 4), Word.of("red", 9), Word.of("one", 13));
+
 	@Test
 	public void tokenizerRemovesPunct() {
-		Tokenizer tokenizer = new Tokenizer(TEST_1);
-		for (int i = 0; i < EXPECTED_1.size(); i++) {
-			assertEquals(EXPECTED_1.get(i), tokenizer.next().text());
-		}
+		testTokenizerAndStringList(new Tokenizer(TEST_1), EXPECTED_1);
 		return;
 	}
 
 	@Test
 	public void tokenizerHandlesSomeSpecialCases() {
-		Tokenizer tokenizer = new Tokenizer(TEST_2);
-		for (int i = 0; i < EXPECTED_2.size(); i++) {
-			assertEquals(EXPECTED_2.get(i), tokenizer.next().text());
-		}
+		testTokenizerAndStringList(new Tokenizer(TEST_2), EXPECTED_2);
 		return;
 	}
 
 	@Test
 	public void tokenizerRecordsExpectedIndexes() {
-		Tokenizer tokenizer = new Tokenizer(TEST_3);
-		for (int i = 0; i < EXPECTED_3.size(); i++) {
-			assertEquals(EXPECTED_3.get(i), tokenizer.next());
+		testTokenizerAndWordList(new Tokenizer(TEST_3), EXPECTED_3);
+	}
+
+	@Test
+	public void tokenizerRecordsExpectedIndexesForSpecialCases() {
+		testTokenizerAndWordList(new Tokenizer(TEST_4), EXPECTED_4);
+		testTokenizerAndWordList(new Tokenizer(TEST_5), EXPECTED_5);
+		return;
+	}
+
+	private void testTokenizerAndStringList(Tokenizer tokenizer, List<String> words) {
+		for (int i = 0; i < words.size(); i++) {
+			assertEquals(words.get(i), tokenizer.next().text());
+		}
+		return;
+	}
+
+	private void testTokenizerAndWordList(Tokenizer tokenizer, List<Word> words) {
+		for (int i = 0; i < words.size(); i++) {
+			assertEquals(words.get(i), tokenizer.next());
 		}
 		return;
 	}
