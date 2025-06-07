@@ -48,6 +48,18 @@ public class Tokenizer {
 			int i = word.indexOf('—');
 			queue.add(new Word(word.substring(i + 1), i + 1, end));
 			return new Word(word.substring(0, i), start, i);
+		} else if ("e.g".equals(word)) {
+			if ('.' == text.charAt(end - 1)) {
+				return new Word("e.g.", start, end);
+			} else {
+				return new Word(word, start, end);
+			}
+		} else if ("i.e".equals(word)) {
+			if ('.' == text.charAt(end - 1)) {
+				return new Word("i.e.", start, end);
+			} else {
+				return new Word(word, start, end);
+			}
 		} else {
 			return new Word(word, start, end);
 		}
