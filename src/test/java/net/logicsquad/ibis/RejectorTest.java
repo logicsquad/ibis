@@ -16,6 +16,10 @@ public class RejectorTest {
 
 	private static final String HYPHEN = "-";
 
+	private static final String DOMAIN_1 = "www.afca.org.au";
+	private static final String DOMAIN_2 = "afca.org.au";
+	private static final String DOMAIN_3 = "oaic.gov.au";
+
 	@Test
 	public void containsDigitReturnsTrueIfWordContainsDigit() {
 		testContainsDigitForString(CONTAINS_DIGIT_1);
@@ -50,6 +54,14 @@ public class RejectorTest {
 	public void rejectorRejectsSingleHyphen() {
 		Rejector rejector = new Rejector();
 		assertTrue(rejector.reject(Word.of(HYPHEN, 0)));
+		return;
+	}
+
+	@Test
+	public void isDomainNameReturnsTrueForDomainNames() {
+		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_1, 0)));
+		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_2, 0)));
+		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_3, 0)));
 		return;
 	}
 }
