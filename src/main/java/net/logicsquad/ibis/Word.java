@@ -93,7 +93,6 @@ public class Word {
 	}
 
 	public Word withSuggestions(List<String> suggestions) {
-		System.out.println("Word.withSuggestions: suggestions = " + suggestions);
 		return new Word(text, start, suggestions);
 	}
 }

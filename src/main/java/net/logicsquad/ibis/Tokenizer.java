@@ -17,6 +17,8 @@ public class Tokenizer {
 	private Deque<Word> queue = new LinkedList<>(); 
 
 	private Handler handler = new Handler();
+	
+	private Rejector rejector = new Rejector();
 
 	private Word next = null;
 
@@ -42,7 +44,7 @@ public class Tokenizer {
 
 	private void primeNext() {
 		Word word = candidateNext();
-		while (word != null && !Character.isLetterOrDigit(word.text().charAt(0))) {
+		while (word != null && rejector.reject(word)) {
 			word = candidateNext();
 		}
 		next = word;
