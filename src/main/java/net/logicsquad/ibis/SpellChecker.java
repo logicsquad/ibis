@@ -16,7 +16,7 @@ public class SpellChecker {
 		while (tokenizer.hasNext()) {
 			Word w = tokenizer.next();
 			if (!containsDigit(w) && !dictionary.isCorrect(w)) {
-				result.add(w);
+				result.add(w.withSuggestions(dictionary.suggestionsFor(w)));
 			}
 		}
 		return result;

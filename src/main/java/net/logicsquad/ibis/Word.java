@@ -1,16 +1,25 @@
 package net.logicsquad.ibis;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Word {
 	private final String text;
 
 	private final int start;
 
+	private final List<String> suggestions;
+
 	private Word(String text, int start) {
+		this(text, start, null);
+	}
+
+	private Word(String text, int start, List<String> suggestions) {
 		Objects.requireNonNull(text);
 		this.text = text;
 		this.start = start;
+		this.suggestions = suggestions;
 		return;
 	}
 
@@ -27,11 +36,15 @@ public class Word {
 	}
 
 	public static Word of(String text, int start) {
+		return of(text, start, null);
+	}
+
+	public static Word of(String text, int start, List<String> suggestions) {
 		Objects.requireNonNull(text);
 		if (start < 0) {
 			throw new IllegalArgumentException("start cannot be negative.");
 		}
-		return new Word(text, start);
+		return new Word(text, start, suggestions);
 	}
 
 	@Override
@@ -53,7 +66,18 @@ public class Word {
 
 	@Override
 	public String toString() {
-		return "Word [start=" + start + ", text=" + text + "]";
+		StringBuilder sb = new StringBuilder();
+		sb.append("Word [start=");
+		sb.append(start);
+		sb.append(", text=");
+		sb.append(text);
+		if (suggestions != null) {
+			sb.append(", suggestions=(");
+			sb.append(suggestions.stream().collect(Collectors.joining(", ")));
+			sb.append(")");
+		}
+		sb.append(']');
+		return sb.toString();
 	}
 
 	public int length() {
@@ -62,5 +86,14 @@ public class Word {
 
 	public char charAt(int i) {
 		return text().charAt(i);
+	}
+
+	public List<String> suggestions() {
+		return suggestions;
+	}
+
+	public Word withSuggestions(List<String> suggestions) {
+		System.out.println("Word.withSuggestions: suggestions = " + suggestions);
+		return new Word(text, start, suggestions);
 	}
 }

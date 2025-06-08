@@ -59,4 +59,16 @@ public class Dictionary {
 			return false;
 		}
 	}
+
+	public List<String> suggestionsFor(Word word) {
+		if (isCorrect(word)) {
+			throw new IllegalArgumentException("word is correct.");
+		}
+		String m = codec.metaphone(word.text());
+		if (map.containsKey(m)) {
+			return map.get(m);
+		} else {
+			return List.of();
+		}
+	}
 }
