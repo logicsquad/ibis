@@ -11,8 +11,11 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.codec.language.Metaphone;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
 public class Dictionary {
+	private static final int MAX_DISTANCE = 4;
+
 	private final Map<String, List<String>> map;
 
 	private final Metaphone codec = new Metaphone();
@@ -66,7 +69,13 @@ public class Dictionary {
 		}
 		String m = codec.metaphone(word.text());
 		if (map.containsKey(m)) {
-			return map.get(m);
+			List<String> result = new ArrayList<>();
+			for (String s : map.get(m)) {
+				if (LevenshteinDistance.getDefaultInstance().apply(word.text(), s) < MAX_DISTANCE) {
+					result.add(s);
+				}
+			}
+			return result;
 		} else {
 			return List.of();
 		}
