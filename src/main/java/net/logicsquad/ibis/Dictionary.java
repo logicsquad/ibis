@@ -16,12 +16,15 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 public class Dictionary {
 	private static final int MAX_DISTANCE = 4;
 
-	private final Map<String, List<String>> map;
+	private final Map<String, List<String>> map = new HashMap<>();
 
 	private final Metaphone codec = new Metaphone();
 
+	public Dictionary() {
+		return;
+	}
+
 	public Dictionary(Path path) {
-		map = new HashMap<>();
 		try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
 			lines.forEach(s -> {
 				String m = codec.metaphone(s);
