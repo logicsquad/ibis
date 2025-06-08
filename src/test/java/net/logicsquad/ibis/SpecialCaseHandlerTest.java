@@ -1,24 +1,85 @@
 package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
 public class SpecialCaseHandlerTest {
-	private static final String TEXT = " e.g. ";
+	private static final String TEXT_1 = " e.g. ";
 
-	private static final Word WORD = Word.of("e.g", 1);
+	private static final Word WORD_1 = Word.of("e.g", 1);
 
-	private static final Word EXPECTED = Word.of("e.g.", 1);
+	private static final Word EXPECTED_1 = Word.of("e.g.", 1);
+
+	private static final String TEXT_2 = "em—dash";
+
+	private static final Word WORD_2A = Word.of("em", 0);
+	private static final Word WORD_2B = Word.of("dash", 3);
+
+	private static final String TEXT_3 = "en–dash";
+
+	private static final Word WORD_3A = Word.of("en", 0);
+	private static final Word WORD_3B = Word.of("dash", 3);
+
+	private static final String TEXT_4 = "non-conforming";
+
+	private static final Word WORD_4A = Word.of("non", 0);
+	private static final Word WORD_4B = Word.of("conforming", 4);
+
+	private static final String TEXT_5 = "tit-for-tat";
+	private static final Word WORD_5A = Word.of("tit", 0);
+	private static final Word WORD_5B = Word.of("for", 4);
+	private static final Word WORD_5C = Word.of("tat", 8);
 
 	@Test
 	public void handleReturnsExpectedWordForEg() {
 		SpecialCaseHandler handler = new SpecialCaseHandler();
-		Word result = handler.handle(WORD, TEXT, new LinkedList<>());
-		assertEquals(EXPECTED, result);
+		Word result = handler.handle(WORD_1, TEXT_1, new LinkedList<>());
+		assertEquals(EXPECTED_1, result);
+		return;
+	}
+
+	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
+		SpecialCaseHandler handler = new SpecialCaseHandler();
+		Deque<Word> queue = new LinkedList<>();
+		Word result = handler.handle(Word.of(text, 0), text, queue);
+		assertEquals(first, result);
+		assertTrue(queue.size() == 1);
+		assertEquals(second, queue.remove());
+		return;
+	}
+
+	@Test
+	public void handlerSplitsOnEmDash() {
+		testHandlerWithTextAndTwoWords(TEXT_2, WORD_2A, WORD_2B);
+		return;
+	}
+
+	@Test
+	public void handlerSplitsOnEnDash() {
+		testHandlerWithTextAndTwoWords(TEXT_3, WORD_3A, WORD_3B);
+		return;
+	}
+
+	@Test
+	public void handlerSplitsOnHyphen() {
+		testHandlerWithTextAndTwoWords(TEXT_4, WORD_4A, WORD_4B);
+		return;
+	}
+
+	@Test
+	public void handlerSplitsOnMultiHyphen() {
+		SpecialCaseHandler handler = new SpecialCaseHandler();
+		Deque<Word> queue = new LinkedList<>();
+		Word result = handler.handle(Word.of(TEXT_5, 0), TEXT_5, queue);
+		assertEquals(WORD_5A, result);
+		assertTrue(queue.size() == 2);
+		assertEquals(WORD_5B, queue.remove());
+		assertEquals(WORD_5C, queue.remove());
 		return;
 	}
 }

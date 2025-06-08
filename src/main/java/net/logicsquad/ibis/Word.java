@@ -55,4 +55,8 @@ public class Word {
 	public String toString() {
 		return "Word [start=" + start + ", text=" + text + "]";
 	}
+
+	public int length() {
+		return text().length();
+	}
 }

@@ -1,9 +1,9 @@
 package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
-import java.util.Queue;
 
 public class Tokenizer {
 	private final BreakIterator breakIterator = BreakIterator.getWordInstance();
@@ -14,7 +14,7 @@ public class Tokenizer {
 
 	private int end;
 
-	private Queue<Word> queue = new LinkedList<>(); 
+	private Deque<Word> queue = new LinkedList<>(); 
 
 	private SpecialCaseHandler handler = new SpecialCaseHandler();
 
@@ -62,7 +62,7 @@ public class Tokenizer {
 
 	public Word next() {
 		if (!queue.isEmpty()) {
-			return queue.remove();
+			return queue.removeFirst();
 		}
 		Word word = next;
 		primeNext();

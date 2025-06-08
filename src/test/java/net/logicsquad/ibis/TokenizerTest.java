@@ -42,6 +42,22 @@ public class TokenizerTest {
 
 	private static final String BLANK_4 = "\t\n ";
 
+	private static final String TEST_6 = "Here—e.g. one—is a tit-for-tat—crazy one–two—example!";
+	private static final Word WORD_6A = Word.of("Here", 0);
+	private static final Word WORD_6B = Word.of("e.g.", 5);
+	private static final Word WORD_6C = Word.of("one", 10);
+	private static final Word WORD_6D = Word.of("is", 14);
+	private static final Word WORD_6E = Word.of("a", 17);
+	private static final Word WORD_6F = Word.of("tit", 19);
+	private static final Word WORD_6G = Word.of("for", 23);
+	private static final Word WORD_6H = Word.of("tat", 27);
+	private static final Word WORD_6I = Word.of("crazy", 31);
+	private static final Word WORD_6J = Word.of("one", 37);
+	private static final Word WORD_6K = Word.of("two", 41);
+	private static final Word WORD_6L = Word.of("example", 45);
+	private static final List<Word> EXPECTED_6 = List.of(WORD_6A, WORD_6B, WORD_6C, WORD_6D, WORD_6E, WORD_6F, WORD_6G, WORD_6H, WORD_6I, WORD_6J, WORD_6K, WORD_6L);
+
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -106,6 +122,12 @@ public class TokenizerTest {
 		assertFalse(tokenizer.hasNext());
 		tokenizer = new Tokenizer(BLANK_4);
 		assertFalse(tokenizer.hasNext());
+		return;
+	}
+
+	@Test
+	public void tokenizerHandlesMixedDashesAndSpecialCases() {
+		testTokenizerAndWordList(new Tokenizer(TEST_6), EXPECTED_6);
 		return;
 	}
 }
