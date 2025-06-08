@@ -1,6 +1,8 @@
 package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
@@ -31,6 +33,14 @@ public class TokenizerTest {
 	private static final String TEST_5 = "Now e.g. red one.";
 
 	private static final List<Word> EXPECTED_5 = List.of(Word.of("Now", 0), Word.of("e.g.", 4), Word.of("red", 9), Word.of("one", 13));
+
+	private static final String BLANK_1 = "";
+
+	private static final String BLANK_2 = "   ";
+
+	private static final String BLANK_3 = "\n";
+
+	private static final String BLANK_4 = "\t\n ";
 
 	@Test
 	public void constructorThrowsOnNull() {
@@ -73,6 +83,29 @@ public class TokenizerTest {
 		for (int i = 0; i < words.size(); i++) {
 			assertEquals(words.get(i), tokenizer.next());
 		}
+		return;
+	}
+
+	// This method just has to run without causing StringIndexOutOfBoundsException
+	@Test
+	public void whileLoopWithHasNextWillReadAllTokens() {
+		Tokenizer tokenizer = new Tokenizer(TEST_1);
+		while (tokenizer.hasNext()) {
+			tokenizer.next();
+		}
+		return;
+	}
+
+	@Test
+	public void hasNextReturnsFalseForBlankString() {
+		Tokenizer tokenizer = new Tokenizer(BLANK_1);
+		assertFalse(tokenizer.hasNext());
+		tokenizer = new Tokenizer(BLANK_2);
+		assertFalse(tokenizer.hasNext());
+		tokenizer = new Tokenizer(BLANK_3);
+		assertFalse(tokenizer.hasNext());
+		tokenizer = new Tokenizer(BLANK_4);
+		assertFalse(tokenizer.hasNext());
 		return;
 	}
 }
