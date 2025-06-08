@@ -7,5 +7,5 @@ import java.nio.file.Paths;
 import org.apache.commons.codec.language.Metaphone;
 import org.junit.jupiter.api.Test;
 
-public class SpellCheckerTest {
+public class CheckerTest {
 }

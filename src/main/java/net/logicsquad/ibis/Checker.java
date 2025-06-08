@@ -3,10 +3,10 @@ package net.logicsquad.ibis;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SpellChecker {
+public class Checker {
 	private final Dictionary dictionary;
 
-	public SpellChecker(Dictionary dictionary) {
+	public Checker(Dictionary dictionary) {
 		this.dictionary = dictionary;
 		return;
 	}
