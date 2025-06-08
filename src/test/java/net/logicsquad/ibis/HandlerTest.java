@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
 
-public class SpecialCaseHandlerTest {
+public class HandlerTest {
 	private static final String TEXT_1 = " e.g. ";
 
 	private static final Word WORD_1 = Word.of("e.g", 1);
@@ -37,14 +37,14 @@ public class SpecialCaseHandlerTest {
 
 	@Test
 	public void handleReturnsExpectedWordForEg() {
-		SpecialCaseHandler handler = new SpecialCaseHandler();
+		Handler handler = new Handler();
 		Word result = handler.handle(WORD_1, TEXT_1, new LinkedList<>());
 		assertEquals(EXPECTED_1, result);
 		return;
 	}
 
 	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
-		SpecialCaseHandler handler = new SpecialCaseHandler();
+		Handler handler = new Handler();
 		Deque<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(text, 0), text, queue);
 		assertEquals(first, result);
@@ -73,7 +73,7 @@ public class SpecialCaseHandlerTest {
 
 	@Test
 	public void handlerSplitsOnMultiHyphen() {
-		SpecialCaseHandler handler = new SpecialCaseHandler();
+		Handler handler = new Handler();
 		Deque<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(TEXT_5, 0), TEXT_5, queue);
 		assertEquals(WORD_5A, result);

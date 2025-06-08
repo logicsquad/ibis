@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-public class SpecialCaseHandler {
+public class Handler {
 	public Word handle(Word word, String text, Deque<Word> queue) {
 		if (word.text().contains("-") || word.text().contains("–") || word.text().contains("—")) {
 			return handle(handleDashes(word, text, queue), text, queue);

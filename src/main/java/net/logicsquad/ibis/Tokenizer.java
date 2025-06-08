@@ -16,7 +16,7 @@ public class Tokenizer {
 
 	private Deque<Word> queue = new LinkedList<>(); 
 
-	private SpecialCaseHandler handler = new SpecialCaseHandler();
+	private Handler handler = new Handler();
 
 	private Word next = null;
 
