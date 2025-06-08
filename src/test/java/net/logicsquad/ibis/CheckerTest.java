@@ -37,7 +37,7 @@ public class CheckerTest {
 		Checker checker = new Checker(DICTIONARY);
 		List<Word> result = checker.checkSpelling(new Tokenizer(INCORRECT));
 		assertEquals(1, result.size());
-		assertEquals("epsilon", result.get(0).text());
+		assertEquals("epsilon", result.getFirst().text());
 		return;
 	}
 }

@@ -89,16 +89,16 @@ public class TokenizerTest {
 	}
 
 	private void testTokenizerAndStringList(Tokenizer tokenizer, List<String> words) {
-		for (int i = 0; i < words.size(); i++) {
-			assertEquals(words.get(i), tokenizer.next().text());
-		}
+        for (String word : words) {
+            assertEquals(word, tokenizer.next().text());
+        }
 		return;
 	}
 
 	private void testTokenizerAndWordList(Tokenizer tokenizer, List<Word> words) {
-		for (int i = 0; i < words.size(); i++) {
-			assertEquals(words.get(i), tokenizer.next());
-		}
+        for (Word word : words) {
+            assertEquals(word, tokenizer.next());
+        }
 		return;
 	}
 

@@ -2,7 +2,6 @@ package net.logicsquad.ibis;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Word {
 	private final String text;
@@ -57,11 +56,10 @@ public class Word {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof Word)) {
+		if (!(obj instanceof Word other)) {
 			return false;
 		}
-		Word other = (Word) obj;
-		return start == other.start && Objects.equals(text, other.text);
+        return start == other.start && Objects.equals(text, other.text);
 	}
 
 	@Override
@@ -73,7 +71,7 @@ public class Word {
 		sb.append(text);
 		if (suggestions != null) {
 			sb.append(", suggestions=(");
-			sb.append(suggestions.stream().collect(Collectors.joining(", ")));
+			sb.append(String.join(", ", suggestions));
 			sb.append(")");
 		}
 		sb.append(']');

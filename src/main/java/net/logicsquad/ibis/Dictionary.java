@@ -12,8 +12,18 @@ import java.util.stream.Stream;
 
 import org.apache.commons.codec.language.Metaphone;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Represents a list of known words organised into a {@link Map} keyed by a phonetic encoding.
+ * 
+ * @author paulh
+ * @since 1.0
+ */
 public class Dictionary {
+	private static final Logger LOG = LoggerFactory.getLogger(Dictionary.class);
+
 	private static final int MAX_DISTANCE = 4;
 
 	private final Map<String, List<String>> map = new HashMap<>();
@@ -37,9 +47,10 @@ public class Dictionary {
 				}
 			});
 		} catch (IOException e) {
-			System.err.println(e);
+			LOG.error("Unable to load world list from {}.", path, e);
+			throw new IllegalArgumentException("Unable to load word list from Path.", e);
 		}
-
+		return;
 	}
 
 	public void addWord(String word) {

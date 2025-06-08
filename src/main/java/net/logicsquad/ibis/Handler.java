@@ -50,7 +50,7 @@ public class Handler {
 				queue.addFirst(handle(parts.get(j), text, queue));
 			}
 		}
-		return parts.get(0);
+		return parts.getFirst();
 	}
 
 	private static boolean isDash(char c) {
