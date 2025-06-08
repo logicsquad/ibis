@@ -59,4 +59,8 @@ public class Word {
 	public int length() {
 		return text().length();
 	}
+
+	public char charAt(int i) {
+		return text().charAt(i);
+	}
 }
