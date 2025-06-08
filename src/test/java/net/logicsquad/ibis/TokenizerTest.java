@@ -33,6 +33,12 @@ public class TokenizerTest {
 	private static final List<Word> EXPECTED_5 = List.of(Word.of("Now", 0), Word.of("e.g.", 4), Word.of("red", 9), Word.of("one", 13));
 
 	@Test
+	public void constructorThrowsOnNull() {
+		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
+		return;
+	}
+
+	@Test
 	public void tokenizerRemovesPunct() {
 		testTokenizerAndStringList(new Tokenizer(TEST_1), EXPECTED_1);
 		return;

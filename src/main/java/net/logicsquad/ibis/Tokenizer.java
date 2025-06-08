@@ -2,6 +2,7 @@ package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Queue;
 
 public class Tokenizer {
@@ -15,7 +16,14 @@ public class Tokenizer {
 
 	private Queue<Word> queue = new LinkedList<>(); 
 
+	/**
+	 * Constructor
+	 * 
+	 * @param text a string
+	 * @throws NullPointerException if {@code text} is {@code null}
+	 */
 	public Tokenizer(String text) {
+		Objects.requireNonNull(text);
 		this.text = text;
 		breakIterator.setText(text);
 		start = breakIterator.first();
