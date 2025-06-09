@@ -1,6 +1,7 @@
 package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Deque;
@@ -34,6 +35,12 @@ public class HandlerTest {
 	private static final Word WORD_5A = Word.of("tit", 0);
 	private static final Word WORD_5B = Word.of("for", 4);
 	private static final Word WORD_5C = Word.of("tat", 8);
+
+	private static final char HYPHEN = '-';
+	private static final char EN_DASH = '–';
+	private static final char EM_DASH = '—';
+	private static final char NON_DASH_1 = '!';
+	private static final char NON_DASH_2 = '#';
 
 	@Test
 	public void handleReturnsExpectedWordForEg() {
@@ -80,6 +87,21 @@ public class HandlerTest {
 		assertTrue(queue.size() == 2);
 		assertEquals(WORD_5B, queue.remove());
 		assertEquals(WORD_5C, queue.remove());
+		return;
+	}
+
+	@Test
+	public void isDashReturnsTrueForDashCharacters() {
+		assertTrue(Handler.isDash(HYPHEN));
+		assertTrue(Handler.isDash(EN_DASH));
+		assertTrue(Handler.isDash(EM_DASH));
+		return;
+	}
+
+	@Test
+	public void isDashReturnsFalseForNonDashCharacters() {
+		assertFalse(Handler.isDash(NON_DASH_1));
+		assertFalse(Handler.isDash(NON_DASH_2));
 		return;
 	}
 }

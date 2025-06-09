@@ -53,7 +53,21 @@ public class Handler {
 		return parts.getFirst();
 	}
 
-	private static boolean isDash(char c) {
-		return c == '-' || c == '–' || c == '—'; 
+	/**
+	 * <p>
+	 * Is {@code c} a <em>dash</em> character? More specifically, is {@code c} any of:
+	 * </p>
+	 * 
+	 * <ul>
+	 * <li>hyphen (U+002D);</li>
+	 * <li>en-dash (U+2013); or</li>
+	 * <li>em-dash (U+2014).</li>
+	 * </ul>
+	 * 
+	 * @param c a {@code char}
+	 * @return {@code true} if {@code c} is a dash character, otherwise {@code false}
+	 */
+	static boolean isDash(char c) {
+		return c == '\u002D' || c == '\u2013' || c == '\u2014'; 
 	}
 }
