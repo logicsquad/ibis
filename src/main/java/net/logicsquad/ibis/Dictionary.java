@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.StringEncoder;
 import org.apache.commons.codec.language.Metaphone;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
@@ -43,12 +45,12 @@ public class Dictionary {
 	/**
 	 * Map for words keyed on phonetic representation
 	 */
-	private final Map<String, List<String>> map = new HashMap<>();
+	final Map<String, List<String>> map = new HashMap<>();
 
 	/**
 	 * Codec for providing phonetic representations
 	 */
-	private final Metaphone codec = new Metaphone();
+	private final StringEncoder codec = new Metaphone();
 
 	/**
 	 * Constructor providing no initial words
@@ -65,14 +67,7 @@ public class Dictionary {
 	public Dictionary(Path path) {
 		try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
 			lines.forEach(s -> {
-				String m = codec.metaphone(s);
-				if (!map.containsKey(m)) {
-					ArrayList<String> l = new ArrayList<>();
-					l.add(s);
-					map.put(m, l);
-				} else {
-					map.get(m).add(s);
-				}
+				addWord(s);
 			});
 		} catch (IOException e) {
 			LOG.error("Unable to load world list from {}.", path, e);
@@ -87,14 +82,11 @@ public class Dictionary {
 	 * @param word a word
 	 */
 	public void addWord(String word) {
-		String m = codec.metaphone(word);
-		if (!map.containsKey(m)) {
-			ArrayList<String> l = new ArrayList<>();
-			l.add(word);
-			map.put(m, l);
-		} else {
-			map.get(m).add(word);
+		List<String> list = map.computeIfAbsent(codeForString(word), s -> new ArrayList<>());
+		if (!list.contains(word)) {
+			list.add(word);
 		}
+		return;
 	}
 
 	/**
@@ -104,12 +96,12 @@ public class Dictionary {
 	 * @return {@code true} if {@code word} contains a word that is spelled correctly, otherwise {@code false}
 	 */
 	public boolean isCorrect(Word word) {
-		String m = codec.metaphone(word.text());
-		if (map.containsKey(m)) {
-			if (map.get(m).contains(word.text())) {
+		String code = codeForWord(word);
+		if (map.containsKey(code)) {
+			if (map.get(code).contains(word.text())) {
 				return true;
 			} else {
-				return map.get(m).contains(word.text().toLowerCase());
+				return map.get(code).contains(word.text().toLowerCase());
 			}
 		} else {
 			return false;
@@ -127,10 +119,10 @@ public class Dictionary {
 		if (isCorrect(word)) {
 			throw new IllegalArgumentException("word is correct.");
 		}
-		String m = codec.metaphone(word.text());
-		if (map.containsKey(m)) {
+		String code = codeForWord(word);
+		if (map.containsKey(code)) {
 			List<String> result = new ArrayList<>();
-			for (String s : map.get(m)) {
+			for (String s : map.get(code)) {
 				if (LevenshteinDistance.getDefaultInstance().apply(word.text(), s) < MAX_DISTANCE) {
 					result.add(s);
 				}
@@ -139,5 +131,30 @@ public class Dictionary {
 		} else {
 			return List.of();
 		}
+	}
+
+	/**
+	 * Returns a code for {@code word} using {@link #codec}.
+	 * 
+	 * @param word a word
+	 * @return code for {@code word}
+	 */
+	private String codeForString(String word) {
+		try {
+			return codec.encode(word);
+		} catch (EncoderException e) {
+			LOG.error("Unable to encode '{}'.", word, e);
+			return null;
+		}
+	}
+
+	/**
+	 * Returns a code for {@code word} using {@link #codec}.
+	 * 
+	 * @param word a {@link Word}
+	 * @return code for {@code word}
+	 */
+	private String codeForWord(Word word) {
+		return codeForString(word.text());
 	}
 }
