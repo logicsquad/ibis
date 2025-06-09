@@ -4,7 +4,34 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+/**
+ * <p>
+ * Handles special cases for a {@link Tokenizer} by potentially breaking a {@link Word} into smaller component {@link Word}s. The
+ * {@link java.text.BreakIterator BreakIterator} used by a {@link Tokenizer} will return some tokens in a form that are not suitable for a
+ * subsequent spell-check. For example, hyphenated words are returned with hyphens intact, whereas a dictionary is more likely to contain
+ * those words in parts. This handler handles the following cases:
+ * </p>
+ * 
+ * <ul>
+ * <li>strips <em>all</em> dash characters and breaks the {@link Word} into component {@link Word}s; and</li>
+ * <li>reverts "e.g" and "i.e" (where the terminal period has been removed) back to "e.g." and "i.e." (as long as there was a terminal
+ * period in the original text).</li>
+ * </ul>
+ * 
+ * @author paulh
+ * @since 1.0
+ */
 public class Handler {
+	/**
+	 * Handles {@code word} (in the larger context of {@code text}). If the {@link Word} needs to be modified as a special case, a new
+	 * {@link Word} is returned for the initial part, and subsequent parts are added as {@link Word} to the {@code queue}. Otherwise,
+	 * {@code word} is simply returned.
+	 * 
+	 * @param word  a {@link Word}
+	 * @param text  text containing {@link Word}
+	 * @param queue {@link Tokenizer}'s queue
+	 * @return a {@link Word} after handling special cases
+	 */
 	public Word handle(Word word, String text, Deque<Word> queue) {
 		if (word.text().contains("-") || word.text().contains("–") || word.text().contains("—")) {
 			return handle(handleDashes(word, text, queue), text, queue);
@@ -25,6 +52,15 @@ public class Handler {
 		}
 	}
 
+	/**
+	 * Handles any dash characters in {@code word} by breaking it into component parts at those dashes. The first part is returned as a new
+	 * {@link Word}, and subsequent parts are added to {@code queue}.
+	 * 
+	 * @param word  a {@link Word} containing dashes
+	 * @param text  text containing {@link Word}
+	 * @param queue {@link Tokenizer}'s queue
+	 * @return first part as a new {@link Word}
+	 */
 	private Word handleDashes(Word word, String text, Deque<Word> queue) {
 		List<Word> parts = new ArrayList<>();
 		int i = 0;
@@ -68,6 +104,6 @@ public class Handler {
 	 * @return {@code true} if {@code c} is a dash character, otherwise {@code false}
 	 */
 	static boolean isDash(char c) {
-		return c == '\u002D' || c == '\u2013' || c == '\u2014'; 
+		return c == '\u002D' || c == '\u2013' || c == '\u2014';
 	}
 }

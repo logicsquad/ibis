@@ -8,6 +8,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests on {@link Tokenizer}.
+ * 
+ * @author paulh
+ */
 public class TokenizerTest {
 	private static final String TEST_1 = """
 			Now (is the time) for all, good—men to come to the aid of the party.

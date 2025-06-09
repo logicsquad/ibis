@@ -9,6 +9,11 @@ import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests on {@link Handler}.
+ * 
+ * @author paulh
+ */
 public class HandlerTest {
 	private static final String TEXT_1 = " e.g. ";
 

@@ -3,9 +3,23 @@ package net.logicsquad.ibis;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Spelling checker.
+ * 
+ * @author paulh
+ * @since 1.0
+ */
 public class Checker {
+	/**
+	 * Dictionary providing correct spellings
+	 */
 	private final Dictionary dictionary;
 
+	/**
+	 * Constructor
+	 * 
+	 * @param dictionary a {@link Dictionary}
+	 */
 	public Checker(Dictionary dictionary) {
 		this.dictionary = dictionary;
 		return;

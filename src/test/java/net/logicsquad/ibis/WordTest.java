@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests on {@link Word}.
+ * 
+ * @author paulh
+ */
 public class WordTest {
 	@Test
 	public void textCannotBeNull() {

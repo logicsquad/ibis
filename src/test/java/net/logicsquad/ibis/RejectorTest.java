@@ -5,6 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests on {@link Rejector}.
+ * 
+ * @author paulh
+ */
 public class RejectorTest {
 	private static final String CONTAINS_DIGIT_1 = "1";
 	private static final String CONTAINS_DIGIT_2 = "1a1";

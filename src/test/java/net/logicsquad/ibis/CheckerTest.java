@@ -8,6 +8,11 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests on {@link Checker}.
+ * 
+ * @author paulh
+ */
 public class CheckerTest {
 	private static final Dictionary DICTIONARY = new Dictionary();
 
