@@ -36,7 +36,7 @@ public class Rejector {
 	 * @return {@code true} if {@code word} should be rejected, otherwise {@code false}
 	 */
 	public boolean reject(Word word) {
-		return !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || word.text().matches(DOMAIN_REGEX);
+		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || word.text().matches(DOMAIN_REGEX);
 	}
 
 	/**

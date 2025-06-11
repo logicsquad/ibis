@@ -69,4 +69,12 @@ public class RejectorTest {
 		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_3, 0)));
 		return;
 	}
+
+	@Test
+	public void rejectorRejectsSingleCharacterWords() {
+		Rejector rejector = new Rejector();
+		assertTrue(rejector.reject(Word.of("A", 0)));
+		assertTrue(rejector.reject(Word.of("b", 0)));
+		return;
+	}
 }
