@@ -35,7 +35,7 @@ public class DictionaryTest {
 
 	@Test
 	public void dictionaryCanLoadBuiltInLists() {
-		Dictionary d = Dictionary.builder().addWords().addNames().build();
+		Dictionary d = Dictionary.builder().addWords().build();
 		System.out.println("DictionaryTest.dictionaryCanLoadBuiltInLists: d.size() = " + d.size());
 	}
 

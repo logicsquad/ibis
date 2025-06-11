@@ -151,9 +151,13 @@ public class Dictionary {
 	}
 
 	public static class Builder {
-		private static final String WORDS = "/words-1.txt.gz";
+		private static final String WORDS_1 = "/words-1.txt.gz";
+		private static final String WORDS_2 = "/words-2.txt";
 
-		private static final String NAMES = "/names-1.txt.gz";
+		private static final String NAMES_1 = "/names-1.txt.gz";
+		private static final String NAMES_2 = "/names-2.txt";
+
+		private static final String ACRONYMS = "/acronyms.txt";
 
 		private static final String GZIP_EXTENSION = ".gz";
 
@@ -163,12 +167,11 @@ public class Dictionary {
 		}
 
 		public Builder addWords() {
-			addWords(WORDS);
-			return this;
-		}
-
-		public Builder addNames() {
-			addWords(NAMES);
+			addWords(WORDS_1);
+			addWords(WORDS_2);
+			addWords(NAMES_1);
+			addWords(NAMES_2);
+			addWords(ACRONYMS);
 			return this;
 		}
 
