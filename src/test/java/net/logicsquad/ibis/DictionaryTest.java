@@ -1,8 +1,6 @@
 package net.logicsquad.ibis;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,41 +11,57 @@ import org.junit.jupiter.api.Test;
  * @author paulh
  */
 public class DictionaryTest {
-	private static final Dictionary DICTIONARY = new Dictionary();
+	private static Dictionary dictionary;
 
 	@BeforeAll
 	public static void setup() {
-		DICTIONARY.addWord("alpha");
-		DICTIONARY.addWord("beta");
+		dictionary = Dictionary.builder().addWord("alpha").addWord("beta").build();
 		return;
 	}
 
 	@Test
 	public void isCorrectReturnsTrueIfWordPresent() {
-		assertTrue(DICTIONARY.isCorrect(Word.of("alpha", 0)));
-		assertTrue(DICTIONARY.isCorrect(Word.of("beta", 0)));
+		assertTrue(dictionary.isCorrect(Word.of("alpha", 0)));
+		assertTrue(dictionary.isCorrect(Word.of("beta", 0)));
 		return;
 	}
 
 	@Test
 	public void isCorrectReturnsFalseIfWordNotPresent() {
-		assertFalse(DICTIONARY.isCorrect(Word.of("gamma", 0)));
-		assertFalse(DICTIONARY.isCorrect(Word.of("delta", 0)));
+		assertFalse(dictionary.isCorrect(Word.of("gamma", 0)));
+		assertFalse(dictionary.isCorrect(Word.of("delta", 0)));
 		return;
 	}
 
 	@Test
-	public void addWordIsIdempotent() {
-		Dictionary dictionary = new Dictionary();
-		assertTrue(dictionary.map.isEmpty());
-		dictionary.addWord("alpha");
-		assertEquals(1, dictionary.map.size());
-		var entry = dictionary.map.entrySet().iterator().next();
-		assertEquals(1, entry.getValue().size());
-		dictionary.addWord("alpha");
-		assertEquals(1, dictionary.map.size());
-		entry = dictionary.map.entrySet().iterator().next();
-		assertEquals(1, entry.getValue().size());
+	public void dictionaryCanLoadBuiltInLists() {
+		Dictionary d = Dictionary.builder().addWords().addNames().build();
+		System.out.println("DictionaryTest.dictionaryCanLoadBuiltInLists: d.size() = " + d.size());
+	}
+
+	@Test
+	public void removeAnnotationThrowsOnNull() {
+		assertThrows(NullPointerException.class, () -> Dictionary.Builder.removeAnnotation(null));
+		return;
+	}
+
+	@Test
+	public void removeAnnotationRemovesAnnotations() {
+		assertEquals("foo", Dictionary.Builder.removeAnnotation("foo:"));
+		assertEquals("bar", Dictionary.Builder.removeAnnotation("bar$"));
+		assertEquals("baz", Dictionary.Builder.removeAnnotation("baz+"));
+		assertEquals("qux", Dictionary.Builder.removeAnnotation("qux!"));
+		assertEquals("quux", Dictionary.Builder.removeAnnotation("quux~"));
+		assertEquals("quuux", Dictionary.Builder.removeAnnotation("quuux="));
+		assertEquals("quuux", Dictionary.Builder.removeAnnotation("quuux=!~"));
+		return;
+	}
+
+	@Test
+	public void removeAnnotationLeavesNonAnnotatedWordsAlone() {
+		assertEquals("foo", Dictionary.Builder.removeAnnotation("foo"));
+		assertEquals("bar", Dictionary.Builder.removeAnnotation("bar"));
+		assertEquals("e.g.", Dictionary.Builder.removeAnnotation("e.g."));
 		return;
 	}
 }

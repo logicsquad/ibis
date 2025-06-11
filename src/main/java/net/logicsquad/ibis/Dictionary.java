@@ -1,6 +1,10 @@
 package net.logicsquad.ibis;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,7 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
@@ -37,6 +43,11 @@ public class Dictionary {
 	private static final Logger LOG = LoggerFactory.getLogger(Dictionary.class);
 
 	/**
+	 * Codec for providing phonetic representations
+	 */
+	private static final StringEncoder CODEC = new Metaphone();
+
+	/**
 	 * Maximum <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> between an incorrect word and suggestions
 	 * returned
 	 */
@@ -45,34 +56,11 @@ public class Dictionary {
 	/**
 	 * Map for words keyed on phonetic representation
 	 */
-	final Map<String, List<String>> map = new HashMap<>();
+	private final Map<String, List<String>> map;
 
-	/**
-	 * Codec for providing phonetic representations
-	 */
-	private final StringEncoder codec = new Metaphone();
-
-	/**
-	 * Constructor providing no initial words
-	 */
-	public Dictionary() {
-		return;
-	}
-
-	/**
-	 * Constructor taking a {@link Path} to a list of words
-	 * 
-	 * @param path {@link Path} to a list of words
-	 */
-	public Dictionary(Path path) {
-		try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
-			lines.forEach(s -> {
-				addWord(s);
-			});
-		} catch (IOException e) {
-			LOG.error("Unable to load world list from {}.", path, e);
-			throw new IllegalArgumentException("Unable to load word list from Path.", e);
-		}
+	private Dictionary(Map<String, List<String>> map) {
+		// copy
+		this.map = map;
 		return;
 	}
 
@@ -139,9 +127,9 @@ public class Dictionary {
 	 * @param word a word
 	 * @return code for {@code word}
 	 */
-	private String codeForString(String word) {
+	private static String codeForString(String word) {
 		try {
-			return codec.encode(word);
+			return CODEC.encode(word);
 		} catch (EncoderException e) {
 			LOG.error("Unable to encode '{}'.", word, e);
 			return null;
@@ -154,7 +142,100 @@ public class Dictionary {
 	 * @param word a {@link Word}
 	 * @return code for {@code word}
 	 */
-	private String codeForWord(Word word) {
+	private static String codeForWord(Word word) {
 		return codeForString(word.text());
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+		private static final String WORDS = "/words-1.txt.gz";
+
+		private static final String NAMES = "/names-1.txt.gz";
+
+		private static final String GZIP_EXTENSION = ".gz";
+
+		private Map<String, List<String>> map = new HashMap<>();
+
+		private Builder() {
+		}
+
+		public Builder addWords() {
+			addWords(WORDS);
+			return this;
+		}
+
+		public Builder addNames() {
+			addWords(NAMES);
+			return this;
+		}
+
+		public Builder addWords(String resourceName) {
+			try (InputStream is = Dictionary.class.getResourceAsStream(resourceName);
+					Reader reader = isGzipped(resourceName) ? new InputStreamReader(new GZIPInputStream(is)) : new InputStreamReader(is)) {
+				addWords(reader);
+			} catch (IOException e) {
+				LOG.error("Unable to add words from {}.", resourceName, e);
+			}
+			return this;
+		}
+
+		public Builder addWords(Reader reader) {
+			try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+				bufferedReader.lines().forEach(s -> addWord(s));
+			} catch (IOException e) {
+				LOG.error("Unable to add words from Reader.", e);
+			}
+			return this;
+		}
+
+		public Builder addWords(Path path) {
+			try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
+				lines.forEach(s -> addWord(s));
+			} catch (IOException e) {
+				LOG.error("Unable to load word list from {}.", path, e);
+				throw new IllegalArgumentException("Unable to load word list from Path.", e);
+			}
+			return this;
+		}
+
+		public Builder addWord(String word) {
+			// Some lists come with "annotations"
+			String cookedWord = removeAnnotation(word).strip();
+			List<String> list = map.computeIfAbsent(codeForString(cookedWord), s -> new ArrayList<>());
+			if (!list.contains(cookedWord)) {
+				list.add(cookedWord);
+			}
+			return this;
+		}
+
+		private static boolean isGzipped(String resourceName) {
+			Objects.requireNonNull(resourceName);
+			return resourceName.endsWith(GZIP_EXTENSION);
+		}
+
+		public Dictionary build() {
+			return new Dictionary(map);
+		}
+
+		static String removeAnnotation(String raw) {
+			Objects.requireNonNull(raw);
+			if (raw.isEmpty()) {
+				return raw;
+			} else {
+				int end = raw.length() - 1;
+				char c = raw.charAt(end);
+				while (c != '.' && !Character.isAlphabetic(c)) {
+					c = raw.charAt(--end);
+				}
+				return raw.substring(0, end + 1);
+			}
+		}
+	}
+
+	int size() {
+		return map == null ? 0 : map.size();
 	}
 }

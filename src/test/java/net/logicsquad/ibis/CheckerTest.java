@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
  * @author paulh
  */
 public class CheckerTest {
-	private static final Dictionary DICTIONARY = new Dictionary();
+	private static Dictionary dictionary;
 
 	private static final String CORRECT = "alpha beta";
 
@@ -22,16 +22,13 @@ public class CheckerTest {
 
 	@BeforeAll
 	public static void init() {
-		DICTIONARY.addWord("alpha");
-		DICTIONARY.addWord("beta");
-		DICTIONARY.addWord("gamma");
-		DICTIONARY.addWord("delta");
+		dictionary = Dictionary.builder().addWord("alpha").addWord("beta").addWord("gamma").addWord("delta").build();
 		return;
 	}
 
 	@Test
 	public void checkSpellingReturnsEmptyListIfAllCorrect() {
-		Checker checker = new Checker(DICTIONARY);
+		Checker checker = new Checker(dictionary);
 		List<Word> result = checker.checkSpelling(new Tokenizer(CORRECT));
 		assertTrue(result.isEmpty());
 		return;
@@ -39,7 +36,7 @@ public class CheckerTest {
 
 	@Test
 	public void checkSpellingReturnsListOfIncorrectWords() {
-		Checker checker = new Checker(DICTIONARY);
+		Checker checker = new Checker(dictionary);
 		List<Word> result = checker.checkSpelling(new Tokenizer(INCORRECT));
 		assertEquals(1, result.size());
 		assertEquals("epsilon", result.getFirst().text());
