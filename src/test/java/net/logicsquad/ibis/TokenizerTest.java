@@ -17,34 +17,26 @@ public class TokenizerTest {
 	private static final String TEST_1 = """
 			Now (is the time) for all, good—men to come to the aid of the party.
 			""";
-
 	private static final List<String> EXPECTED_1 = List.of("Now", "is", "the", "time", "for", "all", "good", "men", "to", "come", "to", "the", "aid", "of",
 			"the", "party");
 
 	private static final String TEST_2 = """
 			Sometimes, e.g. and then later i.e. Crazy!
 			""";
-
 	private static final List<String> EXPECTED_2 = List.of("Sometimes", "e.g.", "and", "then", "later", "i.e.", "Crazy");
 
 	private static final String TEST_3 = "Now is the time.";
-
 	private static final List<Word> EXPECTED_3 = List.of(Word.of("Now", 0), Word.of("is", 4), Word.of("the", 7), Word.of("time", 11));
 
 	private static final String TEST_4 = "Here is my—em dash";
-
 	private static final List<Word> EXPECTED_4 = List.of(Word.of("Here", 0), Word.of("is", 5), Word.of("my", 8), Word.of("em", 11), Word.of("dash", 14));
 
 	private static final String TEST_5 = "Now e.g. red one.";
-
 	private static final List<Word> EXPECTED_5 = List.of(Word.of("Now", 0), Word.of("e.g.", 4), Word.of("red", 9), Word.of("one", 13));
 
 	private static final String BLANK_1 = "";
-
 	private static final String BLANK_2 = "   ";
-
 	private static final String BLANK_3 = "\n";
-
 	private static final String BLANK_4 = "\t\n ";
 
 	private static final String TEST_6 = "Here—e.g. one—is a tit-for-tat—crazy one–two—example!";
@@ -62,6 +54,10 @@ public class TokenizerTest {
 	private static final List<Word> EXPECTED_6 = List.of(WORD_6A, WORD_6B, WORD_6C, WORD_6D, WORD_6F, WORD_6G, WORD_6H, WORD_6I, WORD_6J, WORD_6K,
 			WORD_6L);
 
+	private static final String TEST_7 = "It looks like the client’s, doesn't it?";
+	private static final String COOKED_7 = "It looks like the client's, doesn't it?";
+	private static final List<Word> EXPECTED_7 = List.of(Word.of("It", 0), Word.of("looks", 3), Word.of("like", 9), Word.of("the", 14), Word.of("client's", 18),
+			Word.of("doesn't", 28), Word.of("it", 36));
 
 	@Test
 	public void constructorThrowsOnNull() {
@@ -133,6 +129,15 @@ public class TokenizerTest {
 	@Test
 	public void tokenizerHandlesMixedDashesAndSpecialCases() {
 		testTokenizerAndWordList(new Tokenizer(TEST_6), EXPECTED_6);
+		return;
+	}
+
+	@Test
+	public void tokenizerHandlesApostrophes() {
+		Tokenizer tokenizer = new Tokenizer(TEST_7);
+		testTokenizerAndWordList(tokenizer, EXPECTED_7);
+		assertEquals(COOKED_7, tokenizer.text());
+		assertEquals(TEST_7, tokenizer.rawText());
 		return;
 	}
 }

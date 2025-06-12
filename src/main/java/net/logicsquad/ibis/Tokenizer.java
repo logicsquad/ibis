@@ -3,6 +3,7 @@ package net.logicsquad.ibis;
 import java.text.BreakIterator;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -11,6 +12,7 @@ import java.util.Objects;
  * </p>
  * 
  * <ul>
+ * <li>replaces problematic in-word characters;</li>
  * <li>drops {@link Word}s rejected by its {@link Rejector}; and</li>
  * <li>potentially splits words returned by the {@link BreakIterator} into more than one {@link Word} using a {@link Handler}.</li>
  * </ul>
@@ -20,6 +22,11 @@ import java.util.Objects;
  */
 public class Tokenizer {
 	/**
+	 * Character replacements
+	 */
+	private static final Map<Character, Character> REPLACEMENTS = Map.of('\u2019', '\'');
+
+	/**
 	 * A {@link BreakIterator} to perform initial tokenization
 	 */
 	private final BreakIterator breakIterator = BreakIterator.getWordInstance();
@@ -28,6 +35,11 @@ public class Tokenizer {
 	 * Text to tokenize
 	 */
 	private final String text;
+
+	/**
+	 * Holds original text if {@link #text} was modified
+	 */
+	private final String rawText;
 
 	/**
 	 * Cursor on start position of a word
@@ -67,12 +79,65 @@ public class Tokenizer {
 	 */
 	public Tokenizer(String text) {
 		Objects.requireNonNull(text);
-		this.text = text;
-		breakIterator.setText(text);
+		if (containsReplacement(text)) {
+			this.text = cleanupText(text);
+			this.rawText = text;
+		} else {
+			this.text = text;
+			this.rawText = null;
+		}
+		breakIterator.setText(this.text);
 		start = breakIterator.first();
 		end = breakIterator.next();
 		primeNext();
 		return;
+	}
+
+	/**
+	 * Does {@code text} contain any characters in the replacements list?
+	 * 
+	 * @param text some text
+	 * @return {@code true} if {@code text} contains any characters in the replacements list, otherwise {@code false}
+	 */
+	private boolean containsReplacement(String text) {
+		for (Character c : REPLACEMENTS.keySet()) {
+			if (text.indexOf(c) != -1) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Makes character replacements in {@code text} as defined by the replacements map, and returns the modified string.
+	 * 
+	 * @param text some text
+	 * @return {@code text} with character replacements made
+	 */
+	private String cleanupText(String text) {
+		String result = text;
+		for (var entry : REPLACEMENTS.entrySet()) {
+			result = result.replace(entry.getKey(), entry.getValue());
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the raw text supplied to the constructor.
+	 * 
+	 * @return raw text
+	 */
+	public String rawText() {
+		return rawText == null ? text : rawText;
+	}
+
+	/**
+	 * Returns the <em>potentially modified</em> text used in tokenization.
+	 * 
+	 * @return <em>potentially modified</em> text
+	 */
+	public String text() {
+		return text;
 	}
 
 	/**
