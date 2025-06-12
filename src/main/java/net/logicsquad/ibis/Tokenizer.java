@@ -154,9 +154,19 @@ public class Tokenizer {
 	 * Sets {@link #next} to the next {@link Word}, or {@code null} if there are no more {@link Word}s
 	 */
 	private void primeNext() {
-		Word word = candidateNext();
+		if (!queue.isEmpty()) {
+			next = queue.removeFirst();
+			return;
+		}
+		Word candidate = candidateNext();
+		Word word = candidate == null ? null : handler.handle(candidate, text, queue);
 		while (word != null && rejector.reject(word)) {
-			word = candidateNext();
+			if (queue.isEmpty()) {
+				candidate = candidateNext();
+				word = candidate == null ? null : handler.handle(candidate, text, queue);
+			} else {
+				word = queue.removeFirst();
+			}
 		}
 		next = word;
 		return;
@@ -185,11 +195,8 @@ public class Tokenizer {
 	 * @return next {@link Word}
 	 */
 	public Word next() {
-		if (!queue.isEmpty()) {
-			return queue.removeFirst();
-		}
 		Word word = next;
 		primeNext();
-		return handler.handle(word, text, queue);
+		return word;
 	}
 }

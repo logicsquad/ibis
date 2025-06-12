@@ -63,6 +63,9 @@ public class TokenizerTest {
 	private static final List<Word> EXPECTED_8 = List.of(Word.of("we'll", 2), Word.of("they'll", 11), Word.of("don't", 22), Word.of("can't", 31),
 			Word.of("we're", 40), Word.of("won't", 49));
 
+	private static final String TEST_9 = "alpha—beta gamma";
+	private static final List<Word> EXPECTED_9 = List.of(Word.of("alpha", 0), Word.of("beta", 6), Word.of("gamma", 11));
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -143,6 +146,13 @@ public class TokenizerTest {
 		assertEquals(COOKED_7, tokenizer.text());
 		assertEquals(TEST_7, tokenizer.rawText());
 		testTokenizerAndWordList(new Tokenizer(TEST_8), EXPECTED_8);
+		return;
+	}
+
+	// Another test for dash removal after breaking the parser.
+	@Test
+	public void tokenizerHandlesDashes() {
+		testTokenizerAndWordList(new Tokenizer(TEST_9), EXPECTED_9);
 		return;
 	}
 }
