@@ -59,6 +59,10 @@ public class TokenizerTest {
 	private static final List<Word> EXPECTED_7 = List.of(Word.of("It", 0), Word.of("looks", 3), Word.of("like", 9), Word.of("the", 14), Word.of("client's", 18),
 			Word.of("doesn't", 28), Word.of("it", 36));
 
+	private static final String TEST_8 = "“‘we'll’, ‘they‘ll’, ‘don՚t’, ‘can＇t’, ‘weߴre’, ‘wonʼt’";
+	private static final List<Word> EXPECTED_8 = List.of(Word.of("we'll", 2), Word.of("they'll", 11), Word.of("don't", 22), Word.of("can't", 31),
+			Word.of("we're", 40), Word.of("won't", 49));
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -138,6 +142,7 @@ public class TokenizerTest {
 		testTokenizerAndWordList(tokenizer, EXPECTED_7);
 		assertEquals(COOKED_7, tokenizer.text());
 		assertEquals(TEST_7, tokenizer.rawText());
+		testTokenizerAndWordList(new Tokenizer(TEST_8), EXPECTED_8);
 		return;
 	}
 }

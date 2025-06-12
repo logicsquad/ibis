@@ -24,7 +24,8 @@ public class Tokenizer {
 	/**
 	 * Character replacements
 	 */
-	private static final Map<Character, Character> REPLACEMENTS = Map.of('\u2019', '\'');
+	private static final Map<Character, Character> REPLACEMENTS = Map.of('\u2018', '\'', '\u2019', '\'', '\u055A', '\'', '\uFF07', '\'', '\u07F4', '\'',
+			'\u02BC', '\'');
 
 	/**
 	 * A {@link BreakIterator} to perform initial tokenization
