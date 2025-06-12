@@ -66,6 +66,9 @@ public class TokenizerTest {
 	private static final String TEST_9 = "alpha—beta gamma";
 	private static final List<Word> EXPECTED_9 = List.of(Word.of("alpha", 0), Word.of("beta", 6), Word.of("gamma", 11));
 
+	private static final String TEST_10 = "one 2022-11-03T02:09:00Z two";
+	private static final List<Word> EXPECTED_10 = List.of(Word.of("one", 0), Word.of("two", 25));
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -153,6 +156,13 @@ public class TokenizerTest {
 	@Test
 	public void tokenizerHandlesDashes() {
 		testTokenizerAndWordList(new Tokenizer(TEST_9), EXPECTED_9);
+		return;
+	}
+
+	// Tokenizer seems to be choking on timestamps
+	@Test
+	public void tokenizerShouldCopeWithTimestamp() {
+		testTokenizerAndWordList(new Tokenizer(TEST_10), EXPECTED_10);
 		return;
 	}
 }

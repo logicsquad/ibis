@@ -67,7 +67,7 @@ public class Handler {
 	private Word handleDashes(Word word, String text, Deque<Word> queue) {
 		List<Word> parts = new ArrayList<>();
 		int i = 0;
-		while (isDash(word.text().charAt(i)) && i < word.length()) {
+		while (i < word.length() && isDash(word.text().charAt(i))) {
 			i++;
 		}
 		for (; i < word.length();) {
