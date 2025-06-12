@@ -56,7 +56,7 @@ public class TokenizerTest {
 
 	private static final String TEST_7 = "It looks like the client’s, doesn't it?";
 	private static final String COOKED_7 = "It looks like the client's, doesn't it?";
-	private static final List<Word> EXPECTED_7 = List.of(Word.of("It", 0), Word.of("looks", 3), Word.of("like", 9), Word.of("the", 14), Word.of("client's", 18),
+	private static final List<Word> EXPECTED_7 = List.of(Word.of("It", 0), Word.of("looks", 3), Word.of("like", 9), Word.of("the", 14), Word.of("client", 18),
 			Word.of("doesn't", 28), Word.of("it", 36));
 
 	private static final String TEST_8 = "“‘we'll’, ‘they‘ll’, ‘don՚t’, ‘can＇t’, ‘weߴre’, ‘wonʼt’";

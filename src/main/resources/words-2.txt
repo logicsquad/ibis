@@ -5,7 +5,6 @@ centric
 Chinese
 Christmas
 clawback
-client's
 concessional
 cryptographic
 issuer
@@ -95,4 +94,3 @@ pseudonymity
 identifiers
 reputational
 webpage
-individual's

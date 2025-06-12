@@ -13,9 +13,10 @@ import java.util.List;
  * </p>
  * 
  * <ul>
- * <li>strips <em>all</em> dash characters and breaks the {@link Word} into component {@link Word}s; and</li>
+ * <li>strips <em>all</em> dash characters and breaks the {@link Word} into component {@link Word}s;</li>
  * <li>reverts "e.g" and "i.e" (where the terminal period has been removed) back to "e.g." and "i.e." (as long as there was a terminal
- * period in the original text).</li>
+ * period in the original text); and</li>
+ * <li>removes a terminal "'s" denoting a possessive form.</li>
  * </ul>
  * 
  * @author paulh
@@ -47,6 +48,8 @@ public class Handler {
 			} else {
 				return word;
 			}
+		} else if (word.text().endsWith("'s")) {
+			return Word.of(word.text().substring(0, word.length() - 2), word.start());
 		} else {
 			return word;
 		}
