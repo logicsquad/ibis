@@ -9,3 +9,13 @@ nb
 HR
 SSL
 OTC
+CEO
+PO
+OECD
+CPA
+IP
+QR
+WTO
+NATO
+OK
+USB
