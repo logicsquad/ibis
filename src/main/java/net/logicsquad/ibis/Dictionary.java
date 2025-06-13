@@ -87,9 +87,14 @@ public class Dictionary {
 		String code = codeForWord(word);
 		if (map.containsKey(code)) {
 			if (map.get(code).contains(word.text())) {
+				// Verbatim
+				return true;
+			} else if (map.get(code).contains(word.toLowerCase())) {
+				// All lower case
 				return true;
 			} else {
-				return map.get(code).contains(word.text().toLowerCase());
+				// Initial cap
+				return map.get(code).contains(word.toInitialCap());
 			}
 		} else {
 			return false;

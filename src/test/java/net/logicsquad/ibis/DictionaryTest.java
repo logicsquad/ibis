@@ -64,4 +64,13 @@ public class DictionaryTest {
 		assertEquals("e.g.", Dictionary.Builder.removeAnnotation("e.g."));
 		return;
 	}
+
+	// The problem here is that "AUSTRALIAN" is being flagged incorrect, even though "Australian" is in the word list.
+	@Test
+	public void isCorrectShouldTryInitialCaps() {
+		Dictionary d = Dictionary.builder().addWord("Australian").build();
+		assertTrue(d.isCorrect(Word.of("Australian", 0)));
+		assertTrue(d.isCorrect(Word.of("AUSTRALIAN", 0)));
+		return;
+	}
 }

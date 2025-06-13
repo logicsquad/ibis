@@ -183,4 +183,22 @@ public class Word {
 	public Word withSuggestions(List<String> suggestions) {
 		return new Word(text, start, suggestions);
 	}
+
+	/**
+	 * Returns {@link #text} as lower case.
+	 * 
+	 * @return {@link #text} as lower case
+	 */
+	String toLowerCase() {
+		return text.toLowerCase();
+	}
+
+	/**
+	 * Returns {@link #text} with first character upper case, and remainder lower case.
+	 * 
+	 * @return {@link #text} with initial cap
+	 */
+	String toInitialCap() {
+		return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
+	}
 }
