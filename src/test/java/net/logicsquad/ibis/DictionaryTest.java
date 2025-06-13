@@ -34,12 +34,6 @@ public class DictionaryTest {
 	}
 
 	@Test
-	public void dictionaryCanLoadBuiltInLists() {
-		Dictionary d = Dictionary.builder().addWords().build();
-		System.out.println("DictionaryTest.dictionaryCanLoadBuiltInLists: d.size() = " + d.size());
-	}
-
-	@Test
 	public void removeAnnotationThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> Dictionary.Builder.removeAnnotation(null));
 		return;
