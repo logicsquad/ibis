@@ -36,15 +36,9 @@ public class Handler {
 	public Word handle(Word word, String text, Deque<Word> queue) {
 		if (word.text().contains("-") || word.text().contains("–") || word.text().contains("—")) {
 			return handle(handleDashes(word, text, queue), text, queue);
-		} else if ("e.g".equals(word.text())) {
+		} else if ("e.g".equals(word.toLowerCase()) || "i.e".equals(word.toLowerCase())) {
 			if ('.' == text.charAt(word.end())) {
-				return Word.of("e.g.", word.start());
-			} else {
-				return word;
-			}
-		} else if ("i.e".equals(word.text())) {
-			if ('.' == text.charAt(word.end())) {
-				return Word.of("i.e.", word.start());
+				return Word.of(word.text() + ".", word.start());
 			} else {
 				return word;
 			}

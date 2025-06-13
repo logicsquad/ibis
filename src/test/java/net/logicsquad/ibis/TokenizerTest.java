@@ -69,6 +69,10 @@ public class TokenizerTest {
 	private static final String TEST_10 = "one 2022-11-03T02:09:00Z two";
 	private static final List<Word> EXPECTED_10 = List.of(Word.of("one", 0), Word.of("two", 25));
 
+	// "E.g." and "I.e." should be handled as special cases even with initial caps
+	private static final String TEST_11 = "(E.g. one.) (I.e. another.)";
+	private static final List<Word> EXPECTED_11 = List.of(Word.of("E.g.", 1), Word.of("one", 6), Word.of("I.e.", 13), Word.of("another", 18));
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -163,6 +167,13 @@ public class TokenizerTest {
 	@Test
 	public void tokenizerShouldCopeWithTimestamp() {
 		testTokenizerAndWordList(new Tokenizer(TEST_10), EXPECTED_10);
+		return;
+	}
+
+	// "E.g." and "I.e."
+	@Test
+	public void tokenizerHandlesSpecialCasesWithInitialCaps() {
+		testTokenizerAndWordList(new Tokenizer(TEST_11), EXPECTED_11);
 		return;
 	}
 }
