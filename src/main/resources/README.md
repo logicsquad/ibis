@@ -20,3 +20,6 @@ This list is in the Public Domain.
 acronyms.txt
 This list contains common acronyms not present in words-1.txt or words-2.txt, compiled by Logic Squad.
 This list is in the Public Domain.
+
+Lists taken from other sources have been compressed. Lists maintained by Logic Squad
+are not currently compressed, as they are subject to ongoing updates.
