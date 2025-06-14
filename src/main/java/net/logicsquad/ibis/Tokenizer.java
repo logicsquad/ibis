@@ -99,8 +99,10 @@ public class Tokenizer {
 	 * 
 	 * @param text some text
 	 * @return {@code true} if {@code text} contains any characters in the replacements list, otherwise {@code false}
+	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
 	private boolean containsReplacement(String text) {
+		Objects.requireNonNull(text);
 		for (Character c : REPLACEMENTS.keySet()) {
 			if (text.indexOf(c) != -1) {
 				return true;
@@ -114,8 +116,10 @@ public class Tokenizer {
 	 * 
 	 * @param text some text
 	 * @return {@code text} with character replacements made
+	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
 	private String cleanupText(String text) {
+		Objects.requireNonNull(text);
 		String result = text;
 		for (var entry : REPLACEMENTS.entrySet()) {
 			result = result.replace(entry.getKey(), entry.getValue());

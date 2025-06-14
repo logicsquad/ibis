@@ -3,6 +3,7 @@ package net.logicsquad.ibis;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -32,8 +33,12 @@ public class Handler {
 	 * @param text  text containing {@link Word}
 	 * @param queue {@link Tokenizer}'s queue
 	 * @return a {@link Word} after handling special cases
+	 * @throws NullPointerException if any argument is {@code null}
 	 */
 	public Word handle(Word word, String text, Deque<Word> queue) {
+		Objects.requireNonNull(word);
+		Objects.requireNonNull(text);
+		Objects.requireNonNull(queue);
 		if (word.text().contains("-") || word.text().contains("–") || word.text().contains("—")) {
 			return handle(handleDashes(word, text, queue), text, queue);
 		} else if ("e.g".equals(word.toLowerCase()) || "i.e".equals(word.toLowerCase())) {
@@ -57,8 +62,12 @@ public class Handler {
 	 * @param text  text containing {@link Word}
 	 * @param queue {@link Tokenizer}'s queue
 	 * @return first part as a new {@link Word}
+	 * @throws NullPointerException if any argument is {@code null}
 	 */
 	private Word handleDashes(Word word, String text, Deque<Word> queue) {
+		Objects.requireNonNull(word);
+		Objects.requireNonNull(text);
+		Objects.requireNonNull(queue);
 		List<Word> parts = new ArrayList<>();
 		int i = 0;
 		while (i < word.length() && isDash(word.text().charAt(i))) {
