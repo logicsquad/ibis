@@ -209,8 +209,10 @@ public class Dictionary {
 		}
 
 		public Builder addWord(String word) {
-			// Some lists come with "annotations"
-			String cookedWord = removeAnnotation(word).strip();
+			String cookedWord = word.strip();
+			if (cookedWord.length() == 0) {
+				return this;
+			}
 			List<String> list = map.computeIfAbsent(codeForString(cookedWord), s -> new ArrayList<>());
 			if (!list.contains(cookedWord)) {
 				list.add(cookedWord);
@@ -225,20 +227,6 @@ public class Dictionary {
 
 		public Dictionary build() {
 			return new Dictionary(map);
-		}
-
-		static String removeAnnotation(String raw) {
-			Objects.requireNonNull(raw);
-			if (raw.isEmpty()) {
-				return raw;
-			} else {
-				int end = raw.length() - 1;
-				char c = raw.charAt(end);
-				while (c != '.' && !Character.isAlphabetic(c)) {
-					c = raw.charAt(--end);
-				}
-				return raw.substring(0, end + 1);
-			}
 		}
 	}
 

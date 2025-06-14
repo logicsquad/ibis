@@ -33,32 +33,6 @@ public class DictionaryTest {
 		return;
 	}
 
-	@Test
-	public void removeAnnotationThrowsOnNull() {
-		assertThrows(NullPointerException.class, () -> Dictionary.Builder.removeAnnotation(null));
-		return;
-	}
-
-	@Test
-	public void removeAnnotationRemovesAnnotations() {
-		assertEquals("foo", Dictionary.Builder.removeAnnotation("foo:"));
-		assertEquals("bar", Dictionary.Builder.removeAnnotation("bar$"));
-		assertEquals("baz", Dictionary.Builder.removeAnnotation("baz+"));
-		assertEquals("qux", Dictionary.Builder.removeAnnotation("qux!"));
-		assertEquals("quux", Dictionary.Builder.removeAnnotation("quux~"));
-		assertEquals("quuux", Dictionary.Builder.removeAnnotation("quuux="));
-		assertEquals("quuux", Dictionary.Builder.removeAnnotation("quuux=!~"));
-		return;
-	}
-
-	@Test
-	public void removeAnnotationLeavesNonAnnotatedWordsAlone() {
-		assertEquals("foo", Dictionary.Builder.removeAnnotation("foo"));
-		assertEquals("bar", Dictionary.Builder.removeAnnotation("bar"));
-		assertEquals("e.g.", Dictionary.Builder.removeAnnotation("e.g."));
-		return;
-	}
-
 	// The problem here is that "AUSTRALIAN" is being flagged incorrect, even though "Australian" is in the word list.
 	@Test
 	public void isCorrectShouldTryInitialCaps() {
