@@ -64,19 +64,6 @@ public class Dictionary {
 	}
 
 	/**
-	 * Adds a word to the dictionary.
-	 * 
-	 * @param word a word
-	 */
-	public void addWord(String word) {
-		List<String> list = map.computeIfAbsent(codeForString(word), s -> new ArrayList<>());
-		if (!list.contains(word)) {
-			list.add(word);
-		}
-		return;
-	}
-
-	/**
 	 * Does {@code word} contain a word that is spelled correctly?
 	 * 
 	 * @param word a {@link Word}
