@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
  * 
  * @author paulh
  */
-public class CheckerTest {
+public class CheckerTest extends AbstractTest {
+	private static final String CORRECT_TXT = "/correct.txt";
+
 	private static Dictionary dictionary;
 
 	private static final String CORRECT = "alpha beta";
@@ -51,6 +53,15 @@ public class CheckerTest {
 		Checker checker = new Checker(dictionary);
 		List<Word> result = checker.checkSpelling(new Tokenizer(CHAR_RANGE));
 		assertTrue(result.isEmpty());
+		return;
+	}
+
+	@Test
+	public void knownCorrectTextReturnsNoIncorrectWords() {
+		Dictionary builtIn = Dictionary.builder().addWords().build();
+		Checker checker = new Checker(builtIn);
+		String text = stringFromResource(CORRECT_TXT);
+		assertTrue(checker.checkSpelling(new Tokenizer(text)).isEmpty());
 		return;
 	}
 }
