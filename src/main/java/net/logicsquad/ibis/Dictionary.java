@@ -59,7 +59,6 @@ public class Dictionary {
 	private final Map<String, List<String>> map;
 
 	private Dictionary(Map<String, List<String>> map) {
-		// copy
 		this.map = map;
 		return;
 	}
