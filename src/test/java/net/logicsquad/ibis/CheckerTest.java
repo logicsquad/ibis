@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 public class CheckerTest extends AbstractTest {
 	private static final String CORRECT_TXT = "/correct.txt";
 
-	private static Dictionary dictionary;
+	private static final String INCORRECT_TXT = "/incorrect.txt";
 
 	private static final String CORRECT = "alpha beta";
 
@@ -23,6 +23,8 @@ public class CheckerTest extends AbstractTest {
 
 	// The expectation here is that this is split into 'A' and 'D' and then both should be dropped as single-char words
 	private static final String CHAR_RANGE = "A-D";
+
+	private static Dictionary dictionary;
 
 	@BeforeAll
 	public static void init() {
@@ -61,6 +63,15 @@ public class CheckerTest extends AbstractTest {
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(CORRECT_TXT);
 		assertTrue(checker.checkSpelling(new Tokenizer(text)).isEmpty());
+		return;
+	}
+
+	@Test
+	public void knownIncorrectTextReturnsIncorrectWords() {
+		Dictionary builtIn = Dictionary.builder().addWords().build();
+		Checker checker = new Checker(builtIn);
+		String text = stringFromResource(INCORRECT_TXT);
+		assertEquals(5, checker.checkSpelling(new Tokenizer(text)).size());
 		return;
 	}
 }
