@@ -19,8 +19,5 @@
     </links>
     <menu ref="parent" />
     <menu ref="reports" />
-    <menu name="Generated Documentation">
-      <item name="Javadocs" href="apidocs/index.html" />
-    </menu>
   </body>
 </project>
