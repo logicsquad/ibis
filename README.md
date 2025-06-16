@@ -9,8 +9,9 @@ projects.
 
 Getting started
 ---------------
-You can use Ibis in your projects by including it as a Maven
-dependency:
+
+Ibis requires Java 21. You can use it in your projects by including it
+as a Maven dependency:
 
     <dependency>
       <groupId>net.logicsquad</groupId>
@@ -70,5 +71,5 @@ License](https://opensource.org/license/bsd-2-clause).  This extends
 to the word lists shipped with this project, all of which are used
 here either under the [FreeBSD
 License](https://www.freebsd.org/copyright/freebsd-license/) or
-because they have been explicitly declared as in the (public
-domain)[https://en.wikipedia.org/wiki/Public_domain].
+because they have been explicitly declared as in the [public
+domain](https://en.wikipedia.org/wiki/Public_domain).
