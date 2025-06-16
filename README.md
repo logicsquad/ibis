@@ -50,6 +50,12 @@ In this example, `words-1.txt` and `words-2.txt.gz` are resources
 available on the classpath at runtime. Word lists can be compressed
 with `gzip`.
 
+Internationalisation
+--------------------
+Ibis is currently _very_ Anglocentric: it offers only English word
+lists, and its architecture makes essentially no effort to support
+localisation into other languages. This is on the to-do list.
+
 Contributing
 ------------
 By all means, open issue tickets and pull requests if you have
