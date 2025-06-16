@@ -122,7 +122,7 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a code for {@code word} using {@link #codec}.
+	 * Returns a code for {@code word} using {@link StringEncoder}.
 	 * 
 	 * @param word a word
 	 * @return code for {@code word}
@@ -137,7 +137,7 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a code for {@code word} using {@link #codec}.
+	 * Returns a code for {@code word} using {@link StringEncoder}.
 	 * 
 	 * @param word a {@link Word}
 	 * @return code for {@code word}
@@ -192,7 +192,7 @@ public class Dictionary {
 		/**
 		 * Map from phonetic codes to lists of words
 		 */
-		private Map<String, List<String>> map = new HashMap<>();
+		private final Map<String, List<String>> map = new HashMap<>();
 
 		/**
 		 * Constructor
@@ -224,7 +224,7 @@ public class Dictionary {
 		public Builder addWords(String resourceName) {
 			Objects.requireNonNull(resourceName);
 			try (InputStream is = Dictionary.class.getResourceAsStream(resourceName);
-					Reader reader = isGzipped(resourceName) ? new InputStreamReader(new GZIPInputStream(is)) : new InputStreamReader(is)) {
+					Reader reader = isGzipped(resourceName) ? new InputStreamReader(new GZIPInputStream(is), StandardCharsets.UTF_8) : new InputStreamReader(is, StandardCharsets.UTF_8)) {
 				addWords(reader);
 			} catch (IOException e) {
 				LOG.error("Unable to add words from {}.", resourceName, e);
@@ -242,7 +242,7 @@ public class Dictionary {
 		public Builder addWords(Reader reader) {
 			Objects.requireNonNull(reader);
 			try (BufferedReader bufferedReader = new BufferedReader(reader)) {
-				bufferedReader.lines().forEach(s -> addWord(s));
+				bufferedReader.lines().forEach(this::addWord);
 			} catch (IOException e) {
 				LOG.error("Unable to add words from Reader.", e);
 			}
@@ -259,7 +259,7 @@ public class Dictionary {
 		public Builder addWords(Path path) {
 			Objects.requireNonNull(path);
 			try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
-				lines.forEach(s -> addWord(s));
+				lines.forEach(this::addWord);
 			} catch (IOException e) {
 				LOG.error("Unable to load word list from {}.", path, e);
 				throw new IllegalArgumentException("Unable to load word list from Path.", e);
@@ -277,7 +277,7 @@ public class Dictionary {
 		public Builder addWord(String word) {
 			Objects.requireNonNull(word);
 			String cookedWord = word.strip();
-			if (cookedWord.length() == 0) {
+			if (cookedWord.isEmpty()) {
 				return this;
 			}
 			List<String> list = map.computeIfAbsent(codeForString(cookedWord), s -> new ArrayList<>());

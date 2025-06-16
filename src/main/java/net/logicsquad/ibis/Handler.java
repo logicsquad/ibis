@@ -73,7 +73,7 @@ public class Handler {
 		while (i < word.length() && isDash(word.text().charAt(i))) {
 			i++;
 		}
-		for (; i < word.length();) {
+		while (i < word.length()) {
 			int start = i;
 			StringBuilder sb = new StringBuilder();
 			while (i < word.length() && !isDash(word.text().charAt(i))) {
@@ -85,7 +85,7 @@ public class Handler {
 				i++;
 			}
 		}
-		if (parts.size() == 0) {
+		if (parts.isEmpty()) {
 			throw new IllegalArgumentException("No text found.");
 		} else if (parts.size() > 1) {
 			for (int j = parts.size() - 1; j > 0; j--) {

@@ -2,6 +2,7 @@ package net.logicsquad.ibis;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -31,6 +32,11 @@ public class Rejector {
 	private static final String DOMAIN_REGEX = "^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\\.[a-zA-Z]{2,})+$";
 
 	/**
+	 * Compiled {@link Pattern} for {@link #DOMAIN_REGEX}
+	 */
+    private static final Pattern PATTERN = Pattern.compile(DOMAIN_REGEX);
+
+    /**
 	 * Should {@code word} be rejected?
 	 * 
 	 * @param word {@link Word} to test
@@ -39,7 +45,7 @@ public class Rejector {
 	 */
 	public boolean reject(Word word) {
 		Objects.requireNonNull(word);
-		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || word.text().matches(DOMAIN_REGEX);
+		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || isDomainName(word);
 	}
 
 	/**
@@ -68,6 +74,6 @@ public class Rejector {
 	 */
 	static boolean isDomainName(Word word) {
 		Objects.requireNonNull(word);
-		return word.text().matches(DOMAIN_REGEX);
+		return PATTERN.matcher(word.text()).matches();
 	}
 }

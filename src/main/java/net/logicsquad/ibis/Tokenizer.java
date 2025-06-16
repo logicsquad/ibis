@@ -55,17 +55,17 @@ public class Tokenizer {
 	/**
 	 * A queue to buffer additional {@link Word}s from the {@link Handler}
 	 */
-	private Deque<Word> queue = new LinkedList<>();
+	private final Deque<Word> queue = new LinkedList<>();
 
 	/**
 	 * {@link Handler} for special cases
 	 */
-	private Handler handler = new Handler();
+	private final Handler handler = new Handler();
 
 	/**
 	 * {@link Rejector} to indicate {@link Word}s to omit
 	 */
-	private Rejector rejector = new Rejector();
+	private final Rejector rejector = new Rejector();
 
 	/**
 	 * Next {@link Word} to return
@@ -101,7 +101,7 @@ public class Tokenizer {
 	 * @return {@code true} if {@code text} contains any characters in the replacements list, otherwise {@code false}
 	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
-	private boolean containsReplacement(String text) {
+	private static boolean containsReplacement(String text) {
 		Objects.requireNonNull(text);
 		for (Character c : REPLACEMENTS.keySet()) {
 			if (text.indexOf(c) != -1) {
@@ -118,7 +118,7 @@ public class Tokenizer {
 	 * @return {@code text} with character replacements made
 	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
-	private String cleanupText(String text) {
+	private static String cleanupText(String text) {
 		Objects.requireNonNull(text);
 		String result = text;
 		for (var entry : REPLACEMENTS.entrySet()) {
@@ -166,10 +166,9 @@ public class Tokenizer {
 		Word word = candidate == null ? null : handler.handle(candidate, text, queue);
 		while (word != null && rejector.reject(word)) {
 			if (queue.isEmpty()) {
-				candidate = candidateNext();
-				while (candidate != null && rejector.reject(candidate)) {
-					candidate = candidateNext();
-				}
+                do {
+                    candidate = candidateNext();
+                } while (candidate != null && rejector.reject(candidate));
 				word = candidate == null ? null : handler.handle(candidate, text, queue);
 			} else {
 				word = queue.removeFirst();

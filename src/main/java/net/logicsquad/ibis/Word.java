@@ -1,5 +1,6 @@
 package net.logicsquad.ibis;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -171,7 +172,7 @@ public class Word {
 	 * @return list of suggestions
 	 */
 	public List<String> suggestions() {
-		return suggestions;
+		return Collections.unmodifiableList(suggestions);
 	}
 
 	/**
