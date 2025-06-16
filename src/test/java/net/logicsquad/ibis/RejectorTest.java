@@ -45,20 +45,20 @@ public class RejectorTest {
 	@Test
 	public void rejectorRejectsWordsWithDigits() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_1, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_2, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_3, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_4, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_5, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_6, 0)));
-		assertTrue(rejector.reject(Word.of(CONTAINS_DIGIT_7, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_1, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_2, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_3, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_4, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_5, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_6, 0)));
+		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_7, 0)));
 		return;
 	}
 
 	@Test
 	public void rejectorRejectsSingleHyphen() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.reject(Word.of(HYPHEN, 0)));
+		assertTrue(rejector.shouldReject(Word.of(HYPHEN, 0)));
 		return;
 	}
 
@@ -73,8 +73,8 @@ public class RejectorTest {
 	@Test
 	public void rejectorRejectsSingleCharacterWords() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.reject(Word.of("A", 0)));
-		assertTrue(rejector.reject(Word.of("b", 0)));
+		assertTrue(rejector.shouldReject(Word.of("A", 0)));
+		assertTrue(rejector.shouldReject(Word.of("b", 0)));
 		return;
 	}
 }

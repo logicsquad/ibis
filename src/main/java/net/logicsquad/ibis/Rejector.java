@@ -43,7 +43,7 @@ public class Rejector {
 	 * @return {@code true} if {@code word} should be rejected, otherwise {@code false}
 	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
-	public boolean reject(Word word) {
+	public boolean shouldReject(Word word) {
 		Objects.requireNonNull(word);
 		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || isDomainName(word);
 	}
