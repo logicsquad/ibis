@@ -40,7 +40,6 @@ Friday
 grantor
 hasn't
 helpdesk
-holistic
 holistically
 i.e.
 identifier
@@ -54,7 +53,6 @@ iterative
 January
 July
 June
-loading
 loadings
 lodgement
 lodgements
@@ -78,10 +76,8 @@ reconfirming
 referrer
 referrers
 registrable
-reinstatement
 reinstatements
 reinvestment
-remediation
 remediations
 repopulate
 reportable
@@ -92,7 +88,6 @@ secondees
 September
 settlor
 settlors
-shareholding
 shareholdings
 Sunday
 Sydney
