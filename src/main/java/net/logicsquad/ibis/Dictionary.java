@@ -223,6 +223,7 @@ public class Dictionary {
 		 */
 		public Builder addWords(String resourceName) {
 			Objects.requireNonNull(resourceName);
+			LOG.debug("Adding words from resource '{}'...", resourceName);
 			try (InputStream is = Dictionary.class.getResourceAsStream(resourceName);
 					Reader reader = isGzipped(resourceName) ? new InputStreamReader(new GZIPInputStream(is), StandardCharsets.UTF_8) : new InputStreamReader(is, StandardCharsets.UTF_8)) {
 				addWords(reader);
@@ -258,6 +259,7 @@ public class Dictionary {
 		 */
 		public Builder addWords(Path path) {
 			Objects.requireNonNull(path);
+			LOG.debug("Adding words from path '{}'...", path);
 			try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
 				lines.forEach(this::addWord);
 			} catch (IOException e) {
@@ -283,6 +285,8 @@ public class Dictionary {
 			List<String> list = map.computeIfAbsent(codeForString(cookedWord), s -> new ArrayList<>());
 			if (!list.contains(cookedWord)) {
 				list.add(cookedWord);
+			} else {
+				LOG.debug("'{}' is already in this Dictionary.", cookedWord);
 			}
 			return this;
 		}
