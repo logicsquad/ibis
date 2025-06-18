@@ -8,6 +8,7 @@
   <version>0.1</version>
   <name>Ibis</name>
   <description>A simple spell checker for Java applications.</description>
+  <url>https://github.com/logicsquad/nanocaptcha</url>
   <inceptionYear>2025</inceptionYear>
 
   <organization>
