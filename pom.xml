@@ -43,12 +43,17 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+    <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
+    <maven-project-info-reports-plugin.version>3.9.0</maven-project-info-reports-plugin.version>
+    <versions-maven-plugin.version>2.18.0</versions-maven-plugin.version>
+    <doxia-sitetools.version>2.0.0</doxia-sitetools.version>
   </properties>
 
   <profiles>
@@ -85,38 +90,6 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.3.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.3.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.21.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.9.0</version>
-        </plugin>
         <plugin>
           <groupId>org.sonatype.central</groupId>
           <artifactId>central-publishing-maven-plugin</artifactId>
@@ -201,11 +174,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
+        <version>${maven-site-plugin.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.apache.maven.doxia</groupId>
             <artifactId>doxia-sitetools</artifactId>
-            <version>2.0.0</version>
+            <version>${doxia-sitetools.version}</version>
             <type>pom</type>
           </dependency>
         </dependencies>
@@ -229,6 +203,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>${maven-project-info-reports-plugin.version}</version>
         <configuration>
           <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
         </configuration>
@@ -236,7 +211,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.18.0</version>
+        <version>${versions-maven-plugin.version}</version>
         <reportSets>
           <reportSet>
             <reports>
