@@ -1,7 +1,6 @@
 package net.logicsquad.ibis;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +39,15 @@ public class WordTest {
 		assertEquals("Expected", Word.of("EXPECTED", 0).toInitialCap());
 		assertEquals("Expected", Word.of("eXPECted", 0).toInitialCap());
 		assertEquals("Expected", Word.of("expecteD", 0).toInitialCap());
+		return;
+	}
+
+	// This is merely to cover a bug after introducing the call to Collections.unmodifiableList()
+	@Test
+	public void suggestionsReturnsNullIfSuggestionsIsNull() {
+		Word w = Word.of("foo", 0);
+		// We know w.suggestions is null
+		assertDoesNotThrow(() -> w.suggestions());
 		return;
 	}
 }

@@ -172,7 +172,7 @@ public class Word {
 	 * @return list of suggestions
 	 */
 	public List<String> suggestions() {
-		return Collections.unmodifiableList(suggestions);
+		return suggestions == null ? null : Collections.unmodifiableList(suggestions);
 	}
 
 	/**
