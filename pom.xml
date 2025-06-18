@@ -44,8 +44,42 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+    <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>release</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <build>
     <pluginManagement>
@@ -81,6 +115,74 @@
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.9.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>${central-publishing-maven-plugin.version}</version>
+          <extensions>true</extensions>
+          <configuration>
+            <publishingServerId>central</publishingServerId>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven-source-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <detectLinks />
+            <detectJavaApiLinks />
+          </configuration>
+          <executions>
+            <execution>
+              <id>build-javadocs</id>
+              <phase>package</phase>
+              <goals>
+                <goal>javadoc</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>attach-javadocs</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>${maven-gpg-plugin.version}</version>
+          <configuration>
+            <gpgArguments>
+              <arg>--batch</arg>
+              <arg>--yes</arg>
+              <arg>--pinentry-mode</arg>
+              <arg>loopback</arg>
+            </gpgArguments>
+          </configuration>
+          <executions>
+            <execution>
+              <id>sign-artifacts</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>sign</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
