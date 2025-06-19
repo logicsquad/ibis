@@ -5,6 +5,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <p>
  * Handles special cases for a {@link Tokenizer} by potentially breaking a {@link Word} into smaller component {@link Word}s. The
@@ -24,6 +27,11 @@ import java.util.Objects;
  * @since 1.0
  */
 public class Handler {
+	/**
+	 * Logger
+	 */
+	private static final Logger LOG = LoggerFactory.getLogger(Handler.class);
+
 	/**
 	 * Handles {@code word} (in the larger context of {@code text}). If the {@link Word} needs to be modified as a special case, a new
 	 * {@link Word} is returned for the initial part, and subsequent parts are added as {@link Word} to the {@code queue}. Otherwise,
@@ -86,6 +94,7 @@ public class Handler {
 			}
 		}
 		if (parts.isEmpty()) {
+			LOG.error("Unable to handle {}.", word);
 			throw new IllegalArgumentException("No text found.");
 		} else if (parts.size() > 1) {
 			for (int j = parts.size() - 1; j > 0; j--) {
