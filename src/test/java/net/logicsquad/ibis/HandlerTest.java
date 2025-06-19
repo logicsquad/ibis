@@ -1,11 +1,11 @@
 package net.logicsquad.ibis;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +59,7 @@ public class HandlerTest {
 
 	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
 		Handler handler = new Handler();
-		Deque<Word> queue = new LinkedList<>();
+		Queue<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(text, 0), text, queue);
 		assertEquals(first, result);
 		assertTrue(queue.size() == 1);
@@ -88,7 +88,7 @@ public class HandlerTest {
 	@Test
 	public void handlerSplitsOnMultiHyphen() {
 		Handler handler = new Handler();
-		Deque<Word> queue = new LinkedList<>();
+		Queue<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(TEXT_5, 0), TEXT_5, queue);
 		assertEquals(WORD_5A, result);
 		assertTrue(queue.size() == 2);

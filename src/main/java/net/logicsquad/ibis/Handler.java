@@ -1,9 +1,9 @@
 package net.logicsquad.ibis;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class Handler {
 	 * @return a {@link Word} after handling special cases
 	 * @throws NullPointerException if any argument is {@code null}
 	 */
-	public Word handle(Word word, String text, Deque<Word> queue) {
+	public Word handle(Word word, String text, Queue<Word> queue) {
 		Objects.requireNonNull(word);
 		Objects.requireNonNull(text);
 		Objects.requireNonNull(queue);
@@ -72,7 +72,7 @@ public class Handler {
 	 * @return first part as a new {@link Word}
 	 * @throws NullPointerException if any argument is {@code null}
 	 */
-	private Word handleDashes(Word word, String text, Deque<Word> queue) {
+	private Word handleDashes(Word word, String text, Queue<Word> queue) {
 		Objects.requireNonNull(word);
 		Objects.requireNonNull(text);
 		Objects.requireNonNull(queue);
@@ -94,12 +94,11 @@ public class Handler {
 			}
 		}
 		if (parts.isEmpty()) {
-			LOG.error("Unable to handle {}.", word);
+			LOG.error("Unable to handle {} in context:'{}'", word, text.substring(word.start() - 50, word.end() + 50));
 			throw new IllegalArgumentException("No text found.");
 		} else if (parts.size() > 1) {
-			for (int j = parts.size() - 1; j > 0; j--) {
-				queue.addFirst(handle(parts.get(j), text, queue));
-			}
+			// skip(1) because we want to return the first element below
+			parts.stream().skip(1).forEach(p -> queue.add(handle(p, text, queue)));
 		}
 		return parts.getFirst();
 	}

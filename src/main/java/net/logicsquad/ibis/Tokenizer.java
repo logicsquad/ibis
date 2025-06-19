@@ -1,10 +1,10 @@
 package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 
 /**
  * <p>
@@ -55,7 +55,7 @@ public class Tokenizer {
 	/**
 	 * A queue to buffer additional {@link Word}s from the {@link Handler}
 	 */
-	private final Deque<Word> queue = new LinkedList<>();
+	private final Queue<Word> queue = new LinkedList<>();
 
 	/**
 	 * {@link Handler} for special cases
@@ -159,7 +159,7 @@ public class Tokenizer {
 	 */
 	private void primeNext() {
 		if (!queue.isEmpty()) {
-			next = queue.removeFirst();
+			next = queue.remove();
 			return;
 		}
 		Word candidate = candidateNext();
@@ -172,7 +172,7 @@ public class Tokenizer {
                 } while (candidate != null);
 				word = candidate == null ? null : handler.handle(candidate, text, queue);
 			} else {
-				word = queue.removeFirst();
+				word = queue.remove();
 			}
 		}
 		next = word;
