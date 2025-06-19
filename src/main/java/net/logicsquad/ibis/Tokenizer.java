@@ -185,14 +185,15 @@ public class Tokenizer {
 	 * @return candidate next {@link Word}
 	 */
 	private Word candidateNext() {
-		if (end == BreakIterator.DONE) {
-			return null;
-		} else {
+		while (end != BreakIterator.DONE) {
 			Word word = Word.of(text.substring(start, end), start);
 			start = end;
 			end = breakIterator.next();
-			return word;
+			if (!rejector.shouldReject(word)) {
+				return word;
+			}
 		}
+		return null;
 	}
 
 	/**

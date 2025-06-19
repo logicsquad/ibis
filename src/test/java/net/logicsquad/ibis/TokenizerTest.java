@@ -73,6 +73,15 @@ public class TokenizerTest {
 	private static final String TEST_11 = "(E.g. one.) (I.e. another.)";
 	private static final List<Word> EXPECTED_11 = List.of(Word.of("E.g.", 1), Word.of("one", 6), Word.of("I.e.", 13), Word.of("another", 18));
 
+	// More trouble with dashes
+	private static final String EM_DASH_1 = "CHAPTER 74. The Sperm Whale’s Head—Contrasted View.";
+	private static final String EM_DASH_2 = "CHAPTER 105. Does the Whale’s Magnitude Diminish?—Will He Perish?";
+	private static final String EM_DASH_3 = "CHAPTER 121. Midnight.—The Forecastle Bulwarks.";
+	private static final String EM_DASH_4 = """
+			great Leviathan, called a Commonwealth or
+  State—(in Latin, Civitas) which is but an artificial man
+			""";
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new Tokenizer(null));
@@ -114,6 +123,18 @@ public class TokenizerTest {
         for (Word word : words) {
             assertEquals(word, tokenizer.next());
         }
+		return;
+	}
+
+	/**
+	 * Simply runs {@code tokenizer} until there are no more tokens.
+	 *
+	 * @param tokenizer a {@link Tokenizer}
+	 */
+	private void testTokenizer(Tokenizer tokenizer) {
+		while (tokenizer.hasNext()) {
+			tokenizer.next();
+		}
 		return;
 	}
 
@@ -174,6 +195,16 @@ public class TokenizerTest {
 	@Test
 	public void tokenizerHandlesSpecialCasesWithInitialCaps() {
 		testTokenizerAndWordList(new Tokenizer(TEST_11), EXPECTED_11);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/5
+	@Test
+	public void tokenizerHandlesOddCasesWithDashes() {
+		testTokenizer(new Tokenizer(EM_DASH_1));
+		testTokenizer(new Tokenizer(EM_DASH_2));
+		testTokenizer(new Tokenizer(EM_DASH_3));
+		testTokenizer(new Tokenizer(EM_DASH_4));
 		return;
 	}
 }
