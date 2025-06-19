@@ -164,11 +164,12 @@ public class Tokenizer {
 		}
 		Word candidate = candidateNext();
 		Word word = candidate == null ? null : handler.handle(candidate, text, queue);
+		// We need to call shouldReject() again below, because handler.handle() may have changed the Word
 		while (word != null && rejector.shouldReject(word)) {
 			if (queue.isEmpty()) {
                 do {
                     candidate = candidateNext();
-                } while (candidate != null && rejector.shouldReject(candidate));
+                } while (candidate != null);
 				word = candidate == null ? null : handler.handle(candidate, text, queue);
 			} else {
 				word = queue.removeFirst();
