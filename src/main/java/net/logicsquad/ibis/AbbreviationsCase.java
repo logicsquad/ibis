@@ -1,6 +1,7 @@
 package net.logicsquad.ibis;
 
 import java.util.Queue;
+import java.util.function.Predicate;
 
 /**
  * <p>
@@ -16,9 +17,14 @@ import java.util.Queue;
  * </ol>
  */
 class AbbreviationsCase implements Case {
+	/**
+	 * {@link Predicate} for this {@code Case}
+	 */
+	private static final Predicate<Word> PREDICATE = word -> "e.g".equals(word.toLowerCase()) || "i.e".equals(word.toLowerCase());
+
 	@Override
-	public boolean predicate(Word word) {
-		return "e.g".equals(word.toLowerCase()) || "i.e".equals(word.toLowerCase());
+	public Predicate<Word> predicate() {
+		return PREDICATE;
 	}
 
 	@Override

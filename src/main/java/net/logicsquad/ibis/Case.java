@@ -1,6 +1,7 @@
 package net.logicsquad.ibis;
 
 import java.util.Queue;
+import java.util.function.Predicate;
 
 /**
  * Represents a <em>case</em> for handling by a {@link CaseHandler}.
@@ -10,12 +11,12 @@ import java.util.Queue;
  */
 interface Case {
 	/**
-	 * Is {@code word} suitable for handling by this {@code Case}? That is, would this {@code Case} modify {@code word}?
+	 * Returns a {@link Predicate} answering: is {@code word} suitable for handling by this {@code Case}? That is, would this {@code Case}
+	 * modify {@code word}?
 	 *
-	 * @param word a {@link Word}
-	 * @return {@code true} if this {@code Case} would handle {@code word}, otherwise {@code false}
+	 * @return a {@link Predicate} returning {@code true} if this {@code Case} would handle {@code word}, otherwise {@code false}
 	 */
-	boolean predicate(Word word); // FIXME: why not return Predicate?
+	Predicate<Word> predicate();
 
 	/**
 	 * Handles {@code word}. This method shares its contract with {@link Handler#handle(Word, String, Queue)}.

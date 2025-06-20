@@ -28,7 +28,7 @@ class CaseHandler implements Handler {
 	@Override
 	public Word handle(Word word, String text, Queue<Word> queue) {
 		for (Case c : cases) {
-			if (c.predicate(word)) {
+			if (c.predicate().test(word)) {
 				if (c.recurseOnResult()) {
 					return handle(c.handle(word, text, queue), text, queue);
 				} else {

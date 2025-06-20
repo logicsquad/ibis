@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +33,14 @@ class DashesCase implements Case {
 	 */
 	private static final Logger LOG = LoggerFactory.getLogger(DashesCase.class);
 	
-	
+	/**
+	 * {@link Predicate} for this {@code Case}
+	 */
+	private static final Predicate<Word> PREDICATE = word -> word.text().contains("-") || word.text().contains("–") || word.text().contains("—");
+
 	@Override
-	public boolean predicate(Word word) {
-		return word.text().contains("-") || word.text().contains("–") || word.text().contains("—");
+	public Predicate<Word> predicate() {
+		return PREDICATE;
 	}
 
 	@Override
