@@ -9,7 +9,7 @@ import java.util.Objects;
  * check when calling {@link #checkSpelling(Tokenizer)}.
  * 
  * @author paulh
- * @since 1.0
+ * @since 0.1
  */
 public class Checker {
 	/**

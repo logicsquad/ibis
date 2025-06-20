@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  * 
  * @author paulh
- * @since 1.0
+ * @since 0.1
  */
 public class Dictionary {
 	/**
