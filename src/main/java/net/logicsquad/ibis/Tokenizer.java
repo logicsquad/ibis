@@ -60,7 +60,7 @@ public class Tokenizer {
 	/**
 	 * {@link Handler} for special cases
 	 */
-	private final Handler handler = new Handler();
+	private final Handler handler = Handler.newInstance();
 
 	/**
 	 * {@link Rejector} to indicate {@link Word}s to omit
@@ -159,7 +159,7 @@ public class Tokenizer {
 	 */
 	private void primeNext() {
 		if (!queue.isEmpty()) {
-			next = queue.remove();
+			next = handler.handle(queue.remove(), text, queue);
 			return;
 		}
 		Word candidate = candidateNext();
