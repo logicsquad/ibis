@@ -35,7 +35,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsEmptyListIfAllCorrect() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new Tokenizer(CORRECT));
+		List<Word> result = checker.checkSpelling(new DefaultTokenizer(CORRECT));
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -43,7 +43,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsListOfIncorrectWords() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new Tokenizer(INCORRECT));
+		List<Word> result = checker.checkSpelling(new DefaultTokenizer(INCORRECT));
 		assertEquals(1, result.size());
 		assertEquals("epsilon", result.getFirst().text());
 		return;
@@ -52,7 +52,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void singleCharsShouldBeDroppedEvenFromHyphenatedRange() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new Tokenizer(CHAR_RANGE));
+		List<Word> result = checker.checkSpelling(new DefaultTokenizer(CHAR_RANGE));
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -62,7 +62,7 @@ public class CheckerTest extends AbstractTest {
 		Dictionary builtIn = Dictionary.builder().addWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(CORRECT_TXT);
-		assertTrue(checker.checkSpelling(new Tokenizer(text)).isEmpty());
+		assertTrue(checker.checkSpelling(new DefaultTokenizer(text)).isEmpty());
 		return;
 	}
 
@@ -71,7 +71,7 @@ public class CheckerTest extends AbstractTest {
 		Dictionary builtIn = Dictionary.builder().addWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(INCORRECT_TXT);
-		assertEquals(5, checker.checkSpelling(new Tokenizer(text)).size());
+		assertEquals(5, checker.checkSpelling(new DefaultTokenizer(text)).size());
 		return;
 	}
 }
