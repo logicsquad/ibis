@@ -25,7 +25,7 @@ as a Maven dependency:
 Ibis ships with some built-in word lists, and you can start checking
 text against a `Dictionary` containing these words:
 
-    Dictionary dict = Dictionary.builder().addWords().build();
+    Dictionary dict = Dictionary.builder(Locale.ENGLISH).addWords().build();
     Checker checker = new Checker(dict);
     String text = "Now is the time forr all good men to come to the aod of the party.";
     var incorrect = checker.checkSpelling(new Tokenizer(text));
@@ -52,9 +52,11 @@ with `gzip`.
 
 Internationalisation
 --------------------
-Ibis is currently _very_ Anglocentric: it offers only English word
-lists, and its architecture makes essentially no effort to support
-localisation into other languages. This is on the to-do list.
+Ibis is currently fairly Anglocentric: it offers only English word
+lists, and its support for localisation is limited to entry points
+allowing you to supply a `Locale` for various objects. The only
+`Locale` supported currently is `Locale.ENGLISH`. Support for other
+languages should be straightforward to add if someone was keen.
 
 Contributing
 ------------
