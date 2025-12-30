@@ -53,6 +53,7 @@ iterative
 January
 July
 June
+Latin
 loadings
 lodgement
 lodgements

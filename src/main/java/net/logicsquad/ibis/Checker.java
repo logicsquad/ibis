@@ -2,6 +2,7 @@ package net.logicsquad.ibis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -9,13 +10,23 @@ import java.util.Objects;
  * check when calling {@link #checkSpelling(Tokenizer)}.
  * 
  * @author paulh
- * @since 1.0
+ * @since 0.1
  */
 public class Checker {
 	/**
 	 * Dictionary providing correct spellings
 	 */
 	private final Dictionary dictionary;
+
+	/**
+	 * Constructor that will create {@code Locale.ENGLISH} dictionary
+	 * 
+	 * @since 0.2
+	 */
+	public Checker() {
+		this.dictionary = Dictionary.builder(Locale.ENGLISH).addWords().build();
+		return;
+	}
 
 	/**
 	 * Constructor
@@ -30,8 +41,21 @@ public class Checker {
 	}
 
 	/**
-	 * Checks spelling of text represented by {@link Tokenizer}, returning a {@link List} of incorrect {@link Word}s, along with suggestions for
-	 * the correct word.
+	 * Checks spelling of {@code text}, returning a {@link List} of incorrect {@link Word}s, along with suggestions for the correct word.
+	 * 
+	 * @param text text to check
+	 * @return list of incorrect {@link Word}s with suggestions
+	 * @throws NullPointerException if {@code text} is {@code null}
+	 * @since 0.2
+	 */
+	public List<Word> checkSpelling(String text) {
+		Objects.requireNonNull(text);
+		return checkSpelling(Tokenizer.newInstance(Locale.ENGLISH, text));
+	}
+
+	/**
+	 * Checks spelling of text represented by {@link Tokenizer}, returning a {@link List} of incorrect {@link Word}s, along with suggestions for the correct
+	 * word.
 	 * 
 	 * @param tokenizer a {@link Tokenizer}
 	 * @return list of incorrect {@link Word}s with suggestions

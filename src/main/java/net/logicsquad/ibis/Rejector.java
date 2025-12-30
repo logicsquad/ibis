@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * </ul>
  * 
  * @author paulh
- * @since 1.0
+ * @since 0.1
  */
 public class Rejector {
 	/**

@@ -1,11 +1,11 @@
 package net.logicsquad.ibis;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,12 +36,6 @@ public class HandlerTest {
 	private static final Word WORD_5B = Word.of("for", 4);
 	private static final Word WORD_5C = Word.of("tat", 8);
 
-	private static final char HYPHEN = '-';
-	private static final char EN_DASH = '–';
-	private static final char EM_DASH = '—';
-	private static final char NON_DASH_1 = '!';
-	private static final char NON_DASH_2 = '#';
-
 	private static final String TEXT_6 = "the licensee's list";
 	private static final Word WORD_6 = Word.of("licensee's", 4);
 	private static final Word EXPECTED_6 = Word.of("licensee", 4);
@@ -51,15 +45,15 @@ public class HandlerTest {
 
 	@Test
 	public void handleReturnsExpectedWordForEg() {
-		Handler handler = new Handler();
+		Handler handler = Handler.newInstance(Locale.ENGLISH);
 		Word result = handler.handle(WORD_1, TEXT_1, new LinkedList<>());
 		assertEquals(EXPECTED_1, result);
 		return;
 	}
 
 	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
-		Handler handler = new Handler();
-		Deque<Word> queue = new LinkedList<>();
+		Handler handler = Handler.newInstance(Locale.ENGLISH);
+		Queue<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(text, 0), text, queue);
 		assertEquals(first, result);
 		assertTrue(queue.size() == 1);
@@ -87,8 +81,8 @@ public class HandlerTest {
 
 	@Test
 	public void handlerSplitsOnMultiHyphen() {
-		Handler handler = new Handler();
-		Deque<Word> queue = new LinkedList<>();
+		Handler handler = Handler.newInstance(Locale.ENGLISH);
+		Queue<Word> queue = new LinkedList<>();
 		Word result = handler.handle(Word.of(TEXT_5, 0), TEXT_5, queue);
 		assertEquals(WORD_5A, result);
 		assertTrue(queue.size() == 2);
@@ -98,23 +92,8 @@ public class HandlerTest {
 	}
 
 	@Test
-	public void isDashReturnsTrueForDashCharacters() {
-		assertTrue(Handler.isDash(HYPHEN));
-		assertTrue(Handler.isDash(EN_DASH));
-		assertTrue(Handler.isDash(EM_DASH));
-		return;
-	}
-
-	@Test
-	public void isDashReturnsFalseForNonDashCharacters() {
-		assertFalse(Handler.isDash(NON_DASH_1));
-		assertFalse(Handler.isDash(NON_DASH_2));
-		return;
-	}
-
-	@Test
 	public void handleDealsWithPossessiveForms() {
-		Handler handler = new Handler();
+		Handler handler = Handler.newInstance(Locale.ENGLISH);
 		Word result1 = handler.handle(WORD_6, TEXT_6, new LinkedList<>());
 		assertEquals(EXPECTED_6, result1);
 		Word result2 = handler.handle(WORD_7, TEXT_7, new LinkedList<>());

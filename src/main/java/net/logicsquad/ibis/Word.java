@@ -10,7 +10,7 @@ import java.util.Objects;
  * (as {@code String}s). {@code Word}s are immutable and thread-safe.
  * 
  * @author paulh
- * @since 1.0
+ * @since 0.1
  */
 public class Word {
 	/**
