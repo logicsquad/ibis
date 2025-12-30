@@ -25,10 +25,9 @@ as a Maven dependency:
 Ibis ships with some built-in word lists, and you can start checking
 text against a `Dictionary` containing these words:
 
-    Dictionary dict = Dictionary.builder(Locale.ENGLISH).addWords().build();
-    Checker checker = new Checker(dict);
+    Checker checker = new Checker();
     String text = "Now is the time forr all good men to come to the aod of the party.";
-    var incorrect = checker.checkSpelling(new Tokenizer(text));
+    var incorrect = checker.checkSpelling(text);
     for (Word w : incorrect) {
       System.out.println("w = " + w);
     }
@@ -45,6 +44,7 @@ pattern:
 
     Dictionary.Builder builder = Dictionary.builder().addWords().addWords("/words-1.txt").addWords("/words-2.txt.gz");
     Dictionary dict = builder.build();
+    Checker checker = new Checker(dict);
 
 In this example, `words-1.txt` and `words-2.txt.gz` are resources
 available on the classpath at runtime. Word lists can be compressed
