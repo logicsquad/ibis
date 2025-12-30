@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -45,7 +46,7 @@ public class Dictionary {
 	/**
 	 * Codec for providing phonetic representations
 	 */
-	private static final StringEncoder CODEC = new Metaphone();
+	private final StringEncoder codec;
 
 	/**
 	 * Maximum <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> between an incorrect word and suggestions
@@ -61,9 +62,11 @@ public class Dictionary {
 	/**
 	 * Constructor
 	 * 
+	 * @param codec a {@link StringEncoder}
 	 * @param map map from phonetic representations to word lists
 	 */
-	private Dictionary(Map<String, List<String>> map) {
+	private Dictionary(StringEncoder codec, Map<String, List<String>> map) {
+		this.codec = codec;
 		this.map = map;
 		return;
 	}
@@ -122,14 +125,15 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a code for {@code word} using {@link StringEncoder}.
+	 * Returns a code for {@code word} using {@code codec}.
 	 * 
+	 * @param codec a {@link StringEncoder}
 	 * @param word a word
 	 * @return code for {@code word}
 	 */
-	private static String codeForString(String word) {
+	private static String codeForString(StringEncoder codec, String word) {
 		try {
-			return CODEC.encode(word);
+			return codec.encode(word);
 		} catch (EncoderException e) {
 			LOG.error("Unable to encode '{}'.", word, e);
 			return null;
@@ -142,8 +146,8 @@ public class Dictionary {
 	 * @param word a {@link Word}
 	 * @return code for {@code word}
 	 */
-	private static String codeForWord(Word word) {
-		return codeForString(word.text());
+	private String codeForWord(Word word) {
+		return codeForString(codec, word.text());
 	}
 
 	/**
@@ -156,33 +160,44 @@ public class Dictionary {
 	}
 
 	/**
+	 * Returns a new {@code Builder}.
+	 *
+	 * @param locale a {@link Locale}
+	 * @return a new {@code Builder}
+	 * @since 0.2
+	 */
+	public static Builder builder(Locale locale) {
+		return new Builder(locale);
+	}
+
+	/**
 	 * Builder for {@code Dictionary} objects.
 	 */
 	public static class Builder {
 		/**
 		 * World list 1
 		 */
-		private static final String WORDS_1 = "/words-1.txt.gz";
+		private static final String WORDS_1 = "/en/words-1.txt.gz";
 
 		/**
 		 * World list 2
 		 */
-		private static final String WORDS_2 = "/words-2.txt";
+		private static final String WORDS_2 = "/en/words-2.txt";
 
 		/**
 		 * Names list 1
 		 */
-		private static final String NAMES_1 = "/names-1.txt.gz";
+		private static final String NAMES_1 = "/en/names-1.txt.gz";
 
 		/**
 		 * Names list 2
 		 */
-		private static final String NAMES_2 = "/names-2.txt";
+		private static final String NAMES_2 = "/en/names-2.txt";
 
 		/**
 		 * Acronyms list
 		 */
-		private static final String ACRONYMS = "/acronyms.txt";
+		private static final String ACRONYMS = "/en/acronyms.txt";
 
 		/**
 		 * Extension for compressed lists
@@ -195,22 +210,51 @@ public class Dictionary {
 		private final Map<String, List<String>> map = new HashMap<>();
 
 		/**
+		 * Locale for {@code Dictionary}
+		 */
+		private final Locale locale;
+
+		/**
+		 * {@link StringEncoder} suitable for locale
+		 */
+		private final StringEncoder codec;
+
+		/**
 		 * Constructor
 		 */
 		private Builder() {
+			locale = null;
+			codec = new Metaphone();
+			return;
 		}
 
 		/**
-		 * Adds words from all built-in word lists.
+		 * Constructor taking a {@link Locale}
+		 * 
+		 * @since 0.2
+		 */
+		private Builder(Locale locale) {
+			this.locale = locale;
+			codec = switch (locale.getLanguage()) {
+			case "en" -> new Metaphone();
+			default -> throw new IllegalArgumentException("Unknown Locale: " + locale);
+			};
+			return;
+		}
+
+		/**
+		 * Adds words from all built-in word lists for {@link #locale}. If {@link #locale} is not set, or not known, this method is a no-op
 		 * 
 		 * @return this object
 		 */
 		public Builder addWords() {
-			addWords(WORDS_1);
-			addWords(WORDS_2);
-			addWords(NAMES_1);
-			addWords(NAMES_2);
-			addWords(ACRONYMS);
+			if (locale == Locale.ENGLISH) {
+				addWords(WORDS_1);
+				addWords(WORDS_2);
+				addWords(NAMES_1);
+				addWords(NAMES_2);
+				addWords(ACRONYMS);
+			}
 			return this;
 		}
 
@@ -282,7 +326,7 @@ public class Dictionary {
 			if (cookedWord.isEmpty()) {
 				return this;
 			}
-			List<String> list = map.computeIfAbsent(codeForString(cookedWord), s -> new ArrayList<>());
+			List<String> list = map.computeIfAbsent(codeForString(codec, cookedWord), s -> new ArrayList<>());
 			if (!list.contains(cookedWord)) {
 				list.add(cookedWord);
 			} else {
@@ -308,7 +352,7 @@ public class Dictionary {
 		 * @return new {@code Dictionary}
 		 */
 		public Dictionary build() {
-			return new Dictionary(map);
+			return new Dictionary(codec, map);
 		}
 	}
 
