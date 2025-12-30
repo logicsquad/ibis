@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -84,31 +85,31 @@ public class DefaultTokenizerTest {
 
 	@Test
 	public void constructorThrowsOnNull() {
-		assertThrows(NullPointerException.class, () -> new DefaultTokenizer(null));
+		assertThrows(NullPointerException.class, () -> new DefaultTokenizer(Locale.ENGLISH, null));
 		return;
 	}
 
 	@Test
 	public void DefaultTokenizerRemovesPunct() {
-		testTokenizerAndStringList(new DefaultTokenizer(TEST_1), EXPECTED_1);
+		testTokenizerAndStringList(new DefaultTokenizer(Locale.ENGLISH, TEST_1), EXPECTED_1);
 		return;
 	}
 
 	@Test
 	public void DefaultTokenizerHandlesSomeSpecialCases() {
-		testTokenizerAndStringList(new DefaultTokenizer(TEST_2), EXPECTED_2);
+		testTokenizerAndStringList(new DefaultTokenizer(Locale.ENGLISH, TEST_2), EXPECTED_2);
 		return;
 	}
 
 	@Test
 	public void tokenizerRecordsExpectedIndexes() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_3), EXPECTED_3);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_3), EXPECTED_3);
 	}
 
 	@Test
 	public void tokenizerRecordsExpectedIndexesForSpecialCases() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_4), EXPECTED_4);
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_5), EXPECTED_5);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_4), EXPECTED_4);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_5), EXPECTED_5);
 		return;
 	}
 
@@ -141,7 +142,7 @@ public class DefaultTokenizerTest {
 	// This method just has to run without causing StringIndexOutOfBoundsException
 	@Test
 	public void whileLoopWithHasNextWillReadAllTokens() {
-		Tokenizer tokenizer = new DefaultTokenizer(TEST_1);
+		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, TEST_1);
 		while (tokenizer.hasNext()) {
 			tokenizer.next();
 		}
@@ -150,61 +151,61 @@ public class DefaultTokenizerTest {
 
 	@Test
 	public void hasNextReturnsFalseForBlankString() {
-		Tokenizer tokenizer = new DefaultTokenizer(BLANK_1);
+		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_1);
 		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(BLANK_2);
+		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_2);
 		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(BLANK_3);
+		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_3);
 		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(BLANK_4);
+		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_4);
 		assertFalse(tokenizer.hasNext());
 		return;
 	}
 
 	@Test
 	public void tokenizerHandlesMixedDashesAndSpecialCases() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_6), EXPECTED_6);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_6), EXPECTED_6);
 		return;
 	}
 
 	@Test
 	public void tokenizerHandlesApostrophes() {
-		Tokenizer tokenizer = new DefaultTokenizer(TEST_7);
+		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, TEST_7);
 		testTokenizerAndWordList(tokenizer, EXPECTED_7);
 		assertEquals(COOKED_7, tokenizer.text());
 		assertEquals(TEST_7, tokenizer.rawText());
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_8), EXPECTED_8);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_8), EXPECTED_8);
 		return;
 	}
 
 	// Another test for dash removal after breaking the parser.
 	@Test
 	public void tokenizerHandlesDashes() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_9), EXPECTED_9);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_9), EXPECTED_9);
 		return;
 	}
 
 	// Tokenizer seems to be choking on timestamps
 	@Test
 	public void tokenizerShouldCopeWithTimestamp() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_10), EXPECTED_10);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_10), EXPECTED_10);
 		return;
 	}
 
 	// "E.g." and "I.e."
 	@Test
 	public void tokenizerHandlesSpecialCasesWithInitialCaps() {
-		testTokenizerAndWordList(new DefaultTokenizer(TEST_11), EXPECTED_11);
+		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_11), EXPECTED_11);
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/5
 	@Test
 	public void tokenizerHandlesOddCasesWithDashes() {
-		testTokenizer(new DefaultTokenizer(EM_DASH_1));
-		testTokenizer(new DefaultTokenizer(EM_DASH_2));
-		testTokenizer(new DefaultTokenizer(EM_DASH_3));
-		testTokenizer(new DefaultTokenizer(EM_DASH_4));
+		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_1));
+		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_2));
+		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_3));
+		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_4));
 		return;
 	}
 }

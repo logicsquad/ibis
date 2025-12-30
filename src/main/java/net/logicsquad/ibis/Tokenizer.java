@@ -1,5 +1,7 @@
 package net.logicsquad.ibis;
 
+import java.util.Locale;
+
 /**
  * Tokenizes text into {@link Word}s.
  * 
@@ -42,7 +44,7 @@ public interface Tokenizer {
 	 * @return {@link Tokenizer}
 	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
-	static Tokenizer newInstance(String text) {
-		return new DefaultTokenizer(text);
+	static Tokenizer newInstance(Locale locale, String text) {
+		return new DefaultTokenizer(locale, text);
 	}
 }

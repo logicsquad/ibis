@@ -2,6 +2,7 @@ package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -60,7 +61,7 @@ public class DefaultTokenizer implements Tokenizer {
 	/**
 	 * {@link Handler} for special cases
 	 */
-	private final Handler handler = Handler.newInstance();
+	private final Handler handler;
 
 	/**
 	 * {@link Rejector} to indicate {@link Word}s to omit
@@ -75,11 +76,13 @@ public class DefaultTokenizer implements Tokenizer {
 	/**
 	 * Constructor
 	 * 
+	 * @param locale {@link Locale} for this tokenizer
 	 * @param text a string
 	 * @throws NullPointerException if {@code text} is {@code null}
 	 */
-	public DefaultTokenizer(String text) {
+	public DefaultTokenizer(Locale locale, String text) {
 		Objects.requireNonNull(text);
+		handler = Handler.newInstance(locale);
 		if (containsReplacement(text)) {
 			this.text = cleanupText(text);
 			this.rawText = text;

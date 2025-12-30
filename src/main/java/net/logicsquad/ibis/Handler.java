@@ -1,6 +1,7 @@
 package net.logicsquad.ibis;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 
 /**
@@ -32,11 +33,14 @@ public interface Handler {
 	Word handle(Word word, String text, Queue<Word> queue);
 
 	/**
-	 * Returns a new {@link Handler}.
-	 * 
+	 * Returns a new {@link Handler} for {@link Locale} {@code locale}.
+	 *
 	 * @return new object
 	 */
-	static Handler newInstance() {
-		return new CaseHandler(List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
+	static Handler newInstance(Locale locale) {
+		return switch (locale.getLanguage()) {
+		case "en" -> new CaseHandler(List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
+		default -> throw new IllegalArgumentException("Unsupported Locale: " + locale);
+		}; 
 	}
 }
