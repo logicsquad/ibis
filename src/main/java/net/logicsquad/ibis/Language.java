@@ -19,13 +19,13 @@ enum Language {
 	/**
 	 * English
 	 */
-	ENGLISH("en", Metaphone::new, List.of("/en/words-1.txt.gz", "/en/words-2.txt", "/en/names-1.txt.gz", "/en/names-2.txt", "/en/acronyms.txt"),
+	ENGLISH(Locale.ENGLISH, Metaphone::new, List.of("/en/words-1.txt.gz", "/en/words-2.txt", "/en/names-1.txt.gz", "/en/names-2.txt", "/en/acronyms.txt"),
 			() -> List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
 
 	/**
-	 * ISO 639 language code
+	 * {@link Locale} for this language alone
 	 */
-	private final String code;
+	private final Locale locale;
 
 	/**
 	 * Supplier of {@link StringEncoder}s providing phonetic representations
@@ -45,13 +45,13 @@ enum Language {
 	/**
 	 * Constructor
 	 *
-	 * @param code             ISO 639 language code
+	 * @param locale           {@link Locale} for this language alone
 	 * @param encoder          supplier of {@link StringEncoder}s
 	 * @param builtInWordLists names of built-in word list resources
 	 * @param cases            supplier of {@link Case}s
 	 */
-	Language(String code, Supplier<StringEncoder> encoder, List<String> builtInWordLists, Supplier<List<Case>> cases) {
-		this.code = code;
+	Language(Locale locale, Supplier<StringEncoder> encoder, List<String> builtInWordLists, Supplier<List<Case>> cases) {
+		this.locale = locale;
 		this.encoder = encoder;
 		this.builtInWordLists = builtInWordLists;
 		this.cases = cases;
@@ -69,11 +69,20 @@ enum Language {
 	static Language of(Locale locale) {
 		Objects.requireNonNull(locale);
 		for (Language language : values()) {
-			if (language.code.equals(locale.getLanguage())) {
+			if (language.locale.getLanguage().equals(locale.getLanguage())) {
 				return language;
 			}
 		}
 		throw new IllegalArgumentException("Unsupported Locale: " + locale);
+	}
+
+	/**
+	 * Returns the {@link Locale} for this language alone, such as {@link Locale#ENGLISH}.
+	 * 
+	 * @return {@link Locale}
+	 */
+	Locale locale() {
+		return locale;
 	}
 
 	/**

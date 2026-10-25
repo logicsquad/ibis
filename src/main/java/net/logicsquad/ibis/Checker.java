@@ -24,12 +24,12 @@ public class Checker {
 	private final Tokenizer tokenizer;
 
 	/**
-	 * Constructor that will create {@code Locale.ENGLISH} dictionary
+	 * Constructor using the shared built-in {@link Dictionary} for {@code Locale.ENGLISH}
 	 *
 	 * @since 0.2
 	 */
 	public Checker() {
-		this(Dictionary.builder(Locale.ENGLISH).addBuiltInWords().build());
+		this(Dictionary.builtIn(Locale.ENGLISH));
 		return;
 	}
 

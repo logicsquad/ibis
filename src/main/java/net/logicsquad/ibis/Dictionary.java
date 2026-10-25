@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
@@ -73,17 +75,55 @@ public class Dictionary {
 	private final Map<String, List<String>> map;
 
 	/**
+	 * Optional {@code Dictionary} whose words this one shares rather than copies
+	 */
+	private final Dictionary base;
+
+	/**
+	 * Built-in {@code Dictionary}s, built on first use
+	 */
+	private static final Map<Language, Dictionary> BUILT_IN = new ConcurrentHashMap<>();
+
+	/**
 	 * Constructor
 	 * 
 	 * @param locale a {@link Locale}
 	 * @param codec  a {@link StringEncoder}
 	 * @param map    map from phonetic representations to word lists
+	 * @param base   optional {@code Dictionary} whose words this one shares
 	 */
-	private Dictionary(Locale locale, StringEncoder codec, Map<String, List<String>> map) {
+	private Dictionary(Locale locale, StringEncoder codec, Map<String, List<String>> map, Dictionary base) {
 		this.locale = locale;
 		this.codec = codec;
 		this.map = map;
+		this.base = base;
 		return;
+	}
+
+	/**
+	 * Returns the shared {@code Dictionary} of built-in words for the language of {@code locale}, building it on first use. Its
+	 * {@link #locale()} is the language alone, such as {@link Locale#ENGLISH} for {@link Locale#UK}.
+	 * 
+	 * @param locale a {@link Locale}
+	 * @return built-in {@code Dictionary}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
+	 * @since 0.4
+	 */
+	public static Dictionary builtIn(Locale locale) {
+		return BUILT_IN.computeIfAbsent(Language.of(locale), language -> new Builder(language.locale()).loadBuiltInWords().build());
+	}
+
+	/**
+	 * Returns a new {@code Dictionary} containing {@code words} as well as the words in this one, which it shares rather than copies.
+	 * 
+	 * @param words a {@link Collection} of words
+	 * @return new {@code Dictionary}
+	 * @throws NullPointerException if {@code words} is {@code null}, or contains {@code null}
+	 * @since 0.4
+	 */
+	public Dictionary with(Collection<String> words) {
+		return new Builder(locale, this).addWords(words).build();
 	}
 
 	/**
@@ -106,8 +146,8 @@ public class Dictionary {
 	 */
 	public boolean isCorrect(String word) {
 		Objects.requireNonNull(word);
-		List<String> words = map.get(codeForString(codec, word));
-		return words != null && (words.contains(word) || words.contains(toLowerCase(word, locale)) || words.contains(toInitialCap(word, locale)));
+		List<String> words = wordsFor(codeForString(codec, word));
+		return (words.contains(word) || words.contains(toLowerCase(word, locale)) || words.contains(toInitialCap(word, locale)));
 	}
 
 	/**
@@ -129,8 +169,28 @@ public class Dictionary {
 	 * @return a list of suggestions
 	 */
 	List<String> suggestionsForIncorrect(String word) {
-		List<String> words = map.getOrDefault(codeForString(codec, word), List.of());
-		return words.stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+		return wordsFor(codeForString(codec, word)).stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+	}
+
+	/**
+	 * Returns the words with phonetic representation {@code code}, including those in {@link #base}.
+	 * 
+	 * @param code a phonetic representation
+	 * @return list of words
+	 */
+	private List<String> wordsFor(String code) {
+		List<String> words = map.getOrDefault(code, List.of());
+		if (base == null) {
+			return words;
+		}
+		List<String> baseWords = base.wordsFor(code);
+		if (words.isEmpty()) {
+			return baseWords;
+		} else if (baseWords.isEmpty()) {
+			return words;
+		} else {
+			return Stream.concat(baseWords.stream(), words.stream()).distinct().toList();
+		}
 	}
 
 	/**
@@ -224,24 +284,56 @@ public class Dictionary {
 		private final StringEncoder codec;
 
 		/**
+		 * Optional {@code Dictionary} whose words the new {@code Dictionary} shares
+		 */
+		private Dictionary base;
+
+		/**
 		 * Constructor taking a {@link Locale}
 		 * 
 		 * @since 0.2
 		 */
 		private Builder(Locale locale) {
+			this(locale, null);
+			return;
+		}
+
+		/**
+		 * Constructor taking a {@link Locale} and a {@code Dictionary} to share words with
+		 * 
+		 * @param locale a {@link Locale}
+		 * @param base   optional {@code Dictionary} whose words the new {@code Dictionary} shares
+		 */
+		private Builder(Locale locale, Dictionary base) {
 			language = Language.of(locale);
 			this.locale = locale;
+			this.base = base;
 			codec = language.encoder();
 			return;
 		}
 
 		/**
-		 * Adds words from all built-in word lists for the language of {@link #locale}.
+		 * Adds words from all built-in word lists for the language of {@link #locale}. The new {@code Dictionary} shares them with
+		 * {@link Dictionary#builtIn(Locale)} rather than copying them.
 		 *
 		 * @return this object
 		 * @since 0.4
 		 */
 		public Builder addBuiltInWords() {
+			if (base == null) {
+				base = Dictionary.builtIn(locale);
+			} else {
+				loadBuiltInWords();
+			}
+			return this;
+		}
+
+		/**
+		 * Adds copies of words from all built-in word lists for the language of {@link #locale}.
+		 *
+		 * @return this object
+		 */
+		private Builder loadBuiltInWords() {
 			language.builtInWordLists().forEach(name -> addWords(Dictionary.class, name));
 			return this;
 		}
@@ -407,7 +499,7 @@ public class Dictionary {
 		public Dictionary build() {
 			Map<String, List<String>> copy = HashMap.newHashMap(map.size());
 			map.forEach((code, words) -> copy.put(code, List.copyOf(words)));
-			return new Dictionary(locale, codec, Collections.unmodifiableMap(copy));
+			return new Dictionary(locale, codec, Collections.unmodifiableMap(copy), base);
 		}
 	}
 

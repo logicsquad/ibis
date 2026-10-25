@@ -307,4 +307,51 @@ public class DictionaryTest {
 		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(DictionaryTest.class, NOT_GZIPPED_RESOURCE.substring(1)));
 		return;
 	}
+
+	// https://github.com/logicsquad/ibis/issues/21
+	@Test
+	public void builtInIsSharedByLanguage() {
+		Dictionary builtIn = Dictionary.builtIn(Locale.ENGLISH);
+		assertSame(builtIn, Dictionary.builtIn(Locale.UK));
+		assertEquals(Locale.ENGLISH, Dictionary.builtIn(Locale.US).locale());
+		assertTrue(builtIn.isCorrect("the"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/21
+	@Test
+	public void builtInThrowsForUnsupportedLanguage() {
+		assertThrows(IllegalArgumentException.class, () -> Dictionary.builtIn(Locale.GERMAN));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/21
+	@Test
+	public void withAddsWordsWithoutChangingOriginal() {
+		Dictionary d = dictionary.with(List.of("gamma"));
+		assertTrue(d.isCorrect("alpha"));
+		assertTrue(d.isCorrect("gamma"));
+		assertFalse(dictionary.isCorrect("gamma"));
+		return;
+	}
+
+	// "alfa" has the same Metaphone code as "alpha", so both are suggestions for "allfa"
+	// https://github.com/logicsquad/ibis/issues/21
+	@Test
+	public void withMergesSuggestions() {
+		Dictionary d = dictionary.with(List.of("alfa", "alpha"));
+		assertEquals(List.of("alpha", "alfa"), d.suggestionsFor("allfa"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/21
+	@Test
+	public void addBuiltInWordsKeepsOtherWords() {
+		Dictionary d = Dictionary.builder(Locale.UK).addWord("zyzzyva").addBuiltInWords().build();
+		assertTrue(d.isCorrect("the"));
+		assertTrue(d.isCorrect("zyzzyva"));
+		assertEquals(Locale.UK, d.locale());
+		assertFalse(Dictionary.builtIn(Locale.UK).isCorrect("zyzzyva"));
+		return;
+	}
 }
