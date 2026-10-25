@@ -66,8 +66,8 @@ public class Checker {
 		List<Misspelling> result = new ArrayList<>();
 		while (tokenizer.hasNext()) {
 			Word w = tokenizer.next();
-			if (!dictionary.isCorrect(w)) {
-				result.add(new Misspelling(w, dictionary.suggestionsFor(w)));
+			if (!dictionary.isCorrect(w.text())) {
+				result.add(new Misspelling(w, dictionary.suggestionsForIncorrect(w.text())));
 			}
 		}
 		return result;

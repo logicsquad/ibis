@@ -38,15 +38,15 @@ public class DictionaryTest {
 
 	@Test
 	public void isCorrectReturnsTrueIfWordPresent() {
-		assertTrue(dictionary.isCorrect(new Word("alpha", 0)));
-		assertTrue(dictionary.isCorrect(new Word("beta", 0)));
+		assertTrue(dictionary.isCorrect("alpha"));
+		assertTrue(dictionary.isCorrect("beta"));
 		return;
 	}
 
 	@Test
 	public void isCorrectReturnsFalseIfWordNotPresent() {
-		assertFalse(dictionary.isCorrect(new Word("gamma", 0)));
-		assertFalse(dictionary.isCorrect(new Word("delta", 0)));
+		assertFalse(dictionary.isCorrect("gamma"));
+		assertFalse(dictionary.isCorrect("delta"));
 		return;
 	}
 
@@ -54,17 +54,17 @@ public class DictionaryTest {
 	@Test
 	public void isCorrectShouldTryInitialCaps() {
 		Dictionary d = Dictionary.builder().addWord("Australian").build();
-		assertTrue(d.isCorrect(new Word("Australian", 0)));
-		assertTrue(d.isCorrect(new Word("AUSTRALIAN", 0)));
+		assertTrue(d.isCorrect("Australian"));
+		assertTrue(d.isCorrect("AUSTRALIAN"));
 		return;
 	}
 
-	// "why" has an empty Metaphone code, so an empty Word is looked up among its neighbours
+	// "why" has an empty Metaphone code, so an empty string is looked up among its neighbours
 	// https://github.com/logicsquad/ibis/issues/8
 	@Test
 	public void isCorrectReturnsFalseForEmptyWord() {
 		Dictionary d = Dictionary.builder().addWord("why").build();
-		assertFalse(d.isCorrect(new Word("", 0)));
+		assertFalse(d.isCorrect(""));
 		return;
 	}
 
@@ -72,7 +72,7 @@ public class DictionaryTest {
 	@Test
 	public void addWordsAddsBuiltInWordsForAnyEnglishLocale() {
 		for (Locale locale : List.of(Locale.ENGLISH, Locale.US, Locale.UK, Locale.forLanguageTag("en-AU"))) {
-			assertTrue(Dictionary.builder(locale).addWords().build().isCorrect(new Word("the", 0)), locale.toString());
+			assertTrue(Dictionary.builder(locale).addWords().build().isCorrect("the"), locale.toString());
 		}
 		return;
 	}
@@ -80,7 +80,7 @@ public class DictionaryTest {
 	// https://github.com/logicsquad/ibis/issues/9
 	@Test
 	public void builderWithoutLocaleAddsEnglishBuiltInWords() {
-		assertTrue(Dictionary.builder().addWords().build().isCorrect(new Word("the", 0)));
+		assertTrue(Dictionary.builder().addWords().build().isCorrect("the"));
 		return;
 	}
 
@@ -91,8 +91,8 @@ public class DictionaryTest {
 		Locale defaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.forLanguageTag("tr"));
 		try {
-			assertTrue(d.isCorrect(new Word("It", 0)));
-			assertTrue(d.isCorrect(new Word("INSIDE", 0)));
+			assertTrue(d.isCorrect("It"));
+			assertTrue(d.isCorrect("INSIDE"));
 		} finally {
 			Locale.setDefault(defaultLocale);
 		}
@@ -106,9 +106,9 @@ public class DictionaryTest {
 		Dictionary d = builder.build();
 		// "alfa" has the same Metaphone code as "alpha", and "omega" has a new one
 		builder.addWord("alfa").addWord("omega");
-		assertFalse(d.isCorrect(new Word("alfa", 0)));
-		assertFalse(d.isCorrect(new Word("omega", 0)));
-		assertTrue(builder.build().isCorrect(new Word("omega", 0)));
+		assertFalse(d.isCorrect("alfa"));
+		assertFalse(d.isCorrect("omega"));
+		assertTrue(builder.build().isCorrect("omega"));
 		return;
 	}
 
@@ -156,7 +156,7 @@ public class DictionaryTest {
 		try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(path))) {
 			out.write("zyzzyva\n".getBytes(StandardCharsets.UTF_8));
 		}
-		assertTrue(Dictionary.builder().addWords(path).build().isCorrect(new Word("zyzzyva", 0)));
+		assertTrue(Dictionary.builder().addWords(path).build().isCorrect("zyzzyva"));
 		return;
 	}
 
@@ -175,6 +175,56 @@ public class DictionaryTest {
 			}
 		};
 		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(reader));
+		return;
+	}
+
+	@Test
+	public void toLowerCaseReturnsExpectedResult() {
+		assertEquals("expected", Dictionary.toLowerCase("expected"));
+		assertEquals("expected", Dictionary.toLowerCase("Expected"));
+		assertEquals("expected", Dictionary.toLowerCase("EXPECTED"));
+		assertEquals("expected", Dictionary.toLowerCase("eXPECted"));
+		assertEquals("expected", Dictionary.toLowerCase("expecteD"));
+		return;
+	}
+
+	@Test
+	public void toInitialCapReturnsExpectedResult() {
+		assertEquals("Expected", Dictionary.toInitialCap("expected"));
+		assertEquals("Expected", Dictionary.toInitialCap("Expected"));
+		assertEquals("Expected", Dictionary.toInitialCap("EXPECTED"));
+		assertEquals("Expected", Dictionary.toInitialCap("eXPECted"));
+		assertEquals("Expected", Dictionary.toInitialCap("expecteD"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/8
+	@Test
+	public void toInitialCapReturnsEmptyStringForEmptyText() {
+		assertEquals("", Dictionary.toInitialCap(""));
+		return;
+	}
+
+	// In Turkish, "I" lowercases to dotless "ı", and "i" uppercases to dotted "İ"
+	// https://github.com/logicsquad/ibis/issues/10
+	@Test
+	public void caseConversionIgnoresDefaultLocale() {
+		Locale defaultLocale = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			assertEquals("inside", Dictionary.toLowerCase("INSIDE"));
+			assertEquals("Inside", Dictionary.toInitialCap("INSIDE"));
+			assertEquals("Inside", Dictionary.toInitialCap("inside"));
+		} finally {
+			Locale.setDefault(defaultLocale);
+		}
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/19
+	@Test
+	public void suggestionsForReturnsEmptyListForCorrectWord() {
+		assertEquals(List.of(), dictionary.suggestionsFor("alpha"));
 		return;
 	}
 }

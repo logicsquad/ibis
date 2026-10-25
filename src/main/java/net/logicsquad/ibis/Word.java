@@ -1,6 +1,5 @@
 package net.logicsquad.ibis;
 
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -55,24 +54,5 @@ public record Word(String text, int start) {
 	 */
 	char charAt(int index) {
 		return text.charAt(index);
-	}
-
-	/**
-	 * Returns {@link #text} as lower case, using the rules of {@link Locale#ROOT} rather than the default {@link Locale}.
-	 *
-	 * @return {@link #text} as lower case
-	 */
-	String toLowerCase() {
-		return text.toLowerCase(Locale.ROOT);
-	}
-
-	/**
-	 * Returns {@link #text} with first character upper case, and remainder lower case, using the rules of {@link Locale#ROOT} rather than
-	 * the default {@link Locale}. If {@link #text} is empty, returns it unchanged.
-	 *
-	 * @return {@link #text} with initial cap
-	 */
-	String toInitialCap() {
-		return text.isEmpty() ? text : text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1).toLowerCase(Locale.ROOT);
 	}
 }

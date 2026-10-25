@@ -77,56 +77,61 @@ public class Dictionary {
 	}
 
 	/**
-	 * Does {@code word} contain a word that is spelled correctly?
+	 * Is {@code word} spelled correctly? A word is correct if this {@code Dictionary} contains it verbatim, in lower case, or with an initial
+	 * capital.
 	 * 
-	 * @param word a {@link Word}
-	 * @return {@code true} if {@code word} contains a word that is spelled correctly, otherwise {@code false}
+	 * @param word a word
+	 * @return {@code true} if {@code word} is spelled correctly, otherwise {@code false}
 	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
-	public boolean isCorrect(Word word) {
+	public boolean isCorrect(String word) {
 		Objects.requireNonNull(word);
-		String code = codeForWord(word);
-		if (map.containsKey(code)) {
-			if (map.get(code).contains(word.text())) {
-				// Verbatim
-				return true;
-			} else if (map.get(code).contains(word.toLowerCase())) {
-				// All lower case
-				return true;
-			} else {
-				// Initial cap
-				return map.get(code).contains(word.toInitialCap());
-			}
-		} else {
-			return false;
-		}
+		List<String> words = map.get(codeForString(codec, word));
+		return words != null && (words.contains(word) || words.contains(toLowerCase(word)) || words.contains(toInitialCap(word)));
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}.
+	 * Returns a list of suggestions for {@code word}, or an empty list if {@code word} is spelled correctly.
 	 * 
-	 * @param word a {@link Word}
+	 * @param word a word
 	 * @return a list of suggestions
-	 * @throws IllegalArgumentException if {@code word} already contains a word spelled correctly
-	 * @throws NullPointerException     if {@code word} is {@code null}
+	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
-	public List<String> suggestionsFor(Word word) {
+	public List<String> suggestionsFor(String word) {
 		Objects.requireNonNull(word);
-		if (isCorrect(word)) {
-			throw new IllegalArgumentException("word is correct.");
-		}
-		String code = codeForWord(word);
-		if (map.containsKey(code)) {
-			List<String> result = new ArrayList<>();
-			for (String s : map.get(code)) {
-				if (LevenshteinDistance.getDefaultInstance().apply(word.text(), s) < MAX_DISTANCE) {
-					result.add(s);
-				}
-			}
-			return result;
-		} else {
-			return List.of();
-		}
+		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word);
+	}
+
+	/**
+	 * Returns a list of suggestions for {@code word}, which the caller already knows to be spelled incorrectly.
+	 * 
+	 * @param word an incorrect word
+	 * @return a list of suggestions
+	 */
+	List<String> suggestionsForIncorrect(String word) {
+		List<String> words = map.getOrDefault(codeForString(codec, word), List.of());
+		return words.stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+	}
+
+	/**
+	 * Returns {@code word} as lower case, using the rules of {@link Locale#ROOT} rather than the default {@link Locale}.
+	 *
+	 * @param word a word
+	 * @return {@code word} as lower case
+	 */
+	static String toLowerCase(String word) {
+		return word.toLowerCase(Locale.ROOT);
+	}
+
+	/**
+	 * Returns {@code word} with first character upper case, and remainder lower case, using the rules of {@link Locale#ROOT} rather than the
+	 * default {@link Locale}. If {@code word} is empty, returns it unchanged.
+	 *
+	 * @param word a word
+	 * @return {@code word} with initial cap
+	 */
+	static String toInitialCap(String word) {
+		return word.isEmpty() ? word : word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1).toLowerCase(Locale.ROOT);
 	}
 
 	/**
@@ -143,16 +148,6 @@ public class Dictionary {
 			LOG.error("Unable to encode '{}'.", word, e);
 			return null;
 		}
-	}
-
-	/**
-	 * Returns a code for {@code word} using {@link StringEncoder}.
-	 * 
-	 * @param word a {@link Word}
-	 * @return code for {@code word}
-	 */
-	private String codeForWord(Word word) {
-		return codeForString(codec, word.text());
 	}
 
 	/**

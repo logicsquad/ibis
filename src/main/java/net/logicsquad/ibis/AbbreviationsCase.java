@@ -20,7 +20,7 @@ class AbbreviationsCase implements Case {
 	/**
 	 * {@link Predicate} for this {@code Case}
 	 */
-	private static final Predicate<Word> PREDICATE = word -> "e.g".equals(word.toLowerCase()) || "i.e".equals(word.toLowerCase());
+	private static final Predicate<Word> PREDICATE = word -> "e.g".equalsIgnoreCase(word.text()) || "i.e".equalsIgnoreCase(word.text());
 
 	@Override
 	public Predicate<Word> predicate() {
