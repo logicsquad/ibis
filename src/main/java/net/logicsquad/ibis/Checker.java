@@ -34,13 +34,13 @@ public class Checker {
 	}
 
 	/**
-	 * Constructor using the built-in {@link Tokenizer} for {@code Locale.ENGLISH}
+	 * Constructor using the built-in {@link Tokenizer} for the {@link Dictionary#locale()} of {@code dictionary}
 	 *
 	 * @param dictionary a {@link Dictionary}
 	 * @throws NullPointerException if {@code dictionary} is {@code null}
 	 */
 	public Checker(Dictionary dictionary) {
-		this(dictionary, Tokenizer.forLocale(Locale.ENGLISH));
+		this(dictionary, Tokenizer.forLocale(dictionary.locale()));
 		return;
 	}
 

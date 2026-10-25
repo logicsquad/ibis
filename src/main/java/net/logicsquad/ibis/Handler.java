@@ -39,9 +39,6 @@ interface Handler {
 	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	static Handler newInstance(Locale locale) {
-		return switch (locale.getLanguage()) {
-		case "en" -> new CaseHandler(List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
-		default -> throw new IllegalArgumentException("Unsupported Locale: " + locale);
-		}; 
+		return Language.of(locale).handler();
 	}
 }

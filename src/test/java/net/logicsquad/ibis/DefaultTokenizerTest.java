@@ -235,4 +235,11 @@ public class DefaultTokenizerTest {
 		assertEquals(EXPECTED_ABBREVIATION_AT_END_2, TOKENIZER.tokenize(ABBREVIATION_AT_END_2).toList());
 		return;
 	}
+
+	// https://github.com/logicsquad/ibis/issues/15
+	@Test
+	public void forLocaleThrowsForUnsupportedLanguage() {
+		assertThrows(IllegalArgumentException.class, () -> Tokenizer.forLocale(Locale.GERMAN));
+		return;
+	}
 }

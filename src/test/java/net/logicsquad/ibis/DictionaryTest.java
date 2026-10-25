@@ -180,28 +180,28 @@ public class DictionaryTest {
 
 	@Test
 	public void toLowerCaseReturnsExpectedResult() {
-		assertEquals("expected", Dictionary.toLowerCase("expected"));
-		assertEquals("expected", Dictionary.toLowerCase("Expected"));
-		assertEquals("expected", Dictionary.toLowerCase("EXPECTED"));
-		assertEquals("expected", Dictionary.toLowerCase("eXPECted"));
-		assertEquals("expected", Dictionary.toLowerCase("expecteD"));
+		assertEquals("expected", Dictionary.toLowerCase("expected", Locale.ENGLISH));
+		assertEquals("expected", Dictionary.toLowerCase("Expected", Locale.ENGLISH));
+		assertEquals("expected", Dictionary.toLowerCase("EXPECTED", Locale.ENGLISH));
+		assertEquals("expected", Dictionary.toLowerCase("eXPECted", Locale.ENGLISH));
+		assertEquals("expected", Dictionary.toLowerCase("expecteD", Locale.ENGLISH));
 		return;
 	}
 
 	@Test
 	public void toInitialCapReturnsExpectedResult() {
-		assertEquals("Expected", Dictionary.toInitialCap("expected"));
-		assertEquals("Expected", Dictionary.toInitialCap("Expected"));
-		assertEquals("Expected", Dictionary.toInitialCap("EXPECTED"));
-		assertEquals("Expected", Dictionary.toInitialCap("eXPECted"));
-		assertEquals("Expected", Dictionary.toInitialCap("expecteD"));
+		assertEquals("Expected", Dictionary.toInitialCap("expected", Locale.ENGLISH));
+		assertEquals("Expected", Dictionary.toInitialCap("Expected", Locale.ENGLISH));
+		assertEquals("Expected", Dictionary.toInitialCap("EXPECTED", Locale.ENGLISH));
+		assertEquals("Expected", Dictionary.toInitialCap("eXPECted", Locale.ENGLISH));
+		assertEquals("Expected", Dictionary.toInitialCap("expecteD", Locale.ENGLISH));
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/8
 	@Test
 	public void toInitialCapReturnsEmptyStringForEmptyText() {
-		assertEquals("", Dictionary.toInitialCap(""));
+		assertEquals("", Dictionary.toInitialCap("", Locale.ENGLISH));
 		return;
 	}
 
@@ -212,9 +212,9 @@ public class DictionaryTest {
 		Locale defaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.forLanguageTag("tr"));
 		try {
-			assertEquals("inside", Dictionary.toLowerCase("INSIDE"));
-			assertEquals("Inside", Dictionary.toInitialCap("INSIDE"));
-			assertEquals("Inside", Dictionary.toInitialCap("inside"));
+			assertEquals("inside", Dictionary.toLowerCase("INSIDE", Locale.ENGLISH));
+			assertEquals("Inside", Dictionary.toInitialCap("INSIDE", Locale.ENGLISH));
+			assertEquals("Inside", Dictionary.toInitialCap("inside", Locale.ENGLISH));
 		} finally {
 			Locale.setDefault(defaultLocale);
 		}
@@ -225,6 +225,21 @@ public class DictionaryTest {
 	@Test
 	public void suggestionsForReturnsEmptyListForCorrectWord() {
 		assertEquals(List.of(), dictionary.suggestionsFor("alpha"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/15
+	@Test
+	public void localeReturnsBuilderLocale() {
+		assertEquals(Locale.UK, Dictionary.builder(Locale.UK).build().locale());
+		assertEquals(Locale.ENGLISH, Dictionary.builder().build().locale());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/15
+	@Test
+	public void builderThrowsForUnsupportedLanguage() {
+		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder(Locale.GERMAN));
 		return;
 	}
 }

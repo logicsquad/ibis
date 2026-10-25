@@ -20,7 +20,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
-import org.apache.commons.codec.language.Metaphone;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,8 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  * <p>
- * A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
+ * A {@code Dictionary} has a {@link Locale}, which selects its phonetic encoder, its built-in word lists, and the {@link Tokenizer} that a
+ * {@link Checker} uses with it. A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
  * </p>
  * 
  * @author paulh
@@ -47,6 +47,11 @@ public class Dictionary {
 	 * Logger
 	 */
 	private static final Logger LOG = LoggerFactory.getLogger(Dictionary.class);
+
+	/**
+	 * Locale of words in this {@code Dictionary}
+	 */
+	private final Locale locale;
 
 	/**
 	 * Codec for providing phonetic representations
@@ -67,13 +72,25 @@ public class Dictionary {
 	/**
 	 * Constructor
 	 * 
-	 * @param codec a {@link StringEncoder}
-	 * @param map map from phonetic representations to word lists
+	 * @param locale a {@link Locale}
+	 * @param codec  a {@link StringEncoder}
+	 * @param map    map from phonetic representations to word lists
 	 */
-	private Dictionary(StringEncoder codec, Map<String, List<String>> map) {
+	private Dictionary(Locale locale, StringEncoder codec, Map<String, List<String>> map) {
+		this.locale = locale;
 		this.codec = codec;
 		this.map = map;
 		return;
+	}
+
+	/**
+	 * Returns the {@link Locale} of words in this {@code Dictionary}.
+	 * 
+	 * @return {@link Locale}
+	 * @since 0.4
+	 */
+	public Locale locale() {
+		return locale;
 	}
 
 	/**
@@ -87,7 +104,7 @@ public class Dictionary {
 	public boolean isCorrect(String word) {
 		Objects.requireNonNull(word);
 		List<String> words = map.get(codeForString(codec, word));
-		return words != null && (words.contains(word) || words.contains(toLowerCase(word)) || words.contains(toInitialCap(word)));
+		return words != null && (words.contains(word) || words.contains(toLowerCase(word, locale)) || words.contains(toInitialCap(word, locale)));
 	}
 
 	/**
@@ -114,24 +131,26 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns {@code word} as lower case, using the rules of {@link Locale#ROOT} rather than the default {@link Locale}.
+	 * Returns {@code word} as lower case, using the rules of {@code locale} rather than the default {@link Locale}.
 	 *
-	 * @param word a word
+	 * @param word   a word
+	 * @param locale a {@link Locale}
 	 * @return {@code word} as lower case
 	 */
-	static String toLowerCase(String word) {
-		return word.toLowerCase(Locale.ROOT);
+	static String toLowerCase(String word, Locale locale) {
+		return word.toLowerCase(locale);
 	}
 
 	/**
-	 * Returns {@code word} with first character upper case, and remainder lower case, using the rules of {@link Locale#ROOT} rather than the
+	 * Returns {@code word} with first character upper case, and remainder lower case, using the rules of {@code locale} rather than the
 	 * default {@link Locale}. If {@code word} is empty, returns it unchanged.
 	 *
-	 * @param word a word
+	 * @param word   a word
+	 * @param locale a {@link Locale}
 	 * @return {@code word} with initial cap
 	 */
-	static String toInitialCap(String word) {
-		return word.isEmpty() ? word : word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1).toLowerCase(Locale.ROOT);
+	static String toInitialCap(String word, Locale locale) {
+		return word.isEmpty() ? word : word.substring(0, 1).toUpperCase(locale) + word.substring(1).toLowerCase(locale);
 	}
 
 	/**
@@ -177,31 +196,6 @@ public class Dictionary {
 	 */
 	public static class Builder {
 		/**
-		 * World list 1
-		 */
-		private static final String WORDS_1 = "/en/words-1.txt.gz";
-
-		/**
-		 * World list 2
-		 */
-		private static final String WORDS_2 = "/en/words-2.txt";
-
-		/**
-		 * Names list 1
-		 */
-		private static final String NAMES_1 = "/en/names-1.txt.gz";
-
-		/**
-		 * Names list 2
-		 */
-		private static final String NAMES_2 = "/en/names-2.txt";
-
-		/**
-		 * Acronyms list
-		 */
-		private static final String ACRONYMS = "/en/acronyms.txt";
-
-		/**
 		 * Extension for compressed lists
 		 */
 		private static final String GZIP_EXTENSION = ".gz";
@@ -217,6 +211,11 @@ public class Dictionary {
 		private final Locale locale;
 
 		/**
+		 * {@link Language} of {@link #locale}
+		 */
+		private final Language language;
+
+		/**
 		 * {@link StringEncoder} suitable for locale
 		 */
 		private final StringEncoder codec;
@@ -227,11 +226,9 @@ public class Dictionary {
 		 * @since 0.2
 		 */
 		private Builder(Locale locale) {
+			language = Language.of(locale);
 			this.locale = locale;
-			codec = switch (locale.getLanguage()) {
-			case "en" -> new Metaphone();
-			default -> throw new IllegalArgumentException("Unknown Locale: " + locale);
-			};
+			codec = language.encoder();
 			return;
 		}
 
@@ -241,13 +238,7 @@ public class Dictionary {
 		 * @return this object
 		 */
 		public Builder addWords() {
-			if ("en".equals(locale.getLanguage())) {
-				addWords(WORDS_1);
-				addWords(WORDS_2);
-				addWords(NAMES_1);
-				addWords(NAMES_2);
-				addWords(ACRONYMS);
-			}
+			language.builtInWordLists().forEach(this::addWords);
 			return this;
 		}
 
@@ -374,7 +365,7 @@ public class Dictionary {
 		public Dictionary build() {
 			Map<String, List<String>> copy = HashMap.newHashMap(map.size());
 			map.forEach((code, words) -> copy.put(code, List.copyOf(words)));
-			return new Dictionary(codec, Collections.unmodifiableMap(copy));
+			return new Dictionary(locale, codec, Collections.unmodifiableMap(copy));
 		}
 	}
 
