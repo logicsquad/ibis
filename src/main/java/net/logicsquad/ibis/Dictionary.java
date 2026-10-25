@@ -151,12 +151,12 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a new {@code Builder}.
-	 * 
+	 * Returns a new {@code Builder} for {@code Locale.ENGLISH}.
+	 *
 	 * @return a new {@code Builder}
 	 */
 	public static Builder builder() {
-		return new Builder();
+		return builder(Locale.ENGLISH);
 	}
 
 	/**
@@ -164,6 +164,8 @@ public class Dictionary {
 	 *
 	 * @param locale a {@link Locale}
 	 * @return a new {@code Builder}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 * @since 0.2
 	 */
 	public static Builder builder(Locale locale) {
@@ -220,15 +222,6 @@ public class Dictionary {
 		private final StringEncoder codec;
 
 		/**
-		 * Constructor
-		 */
-		private Builder() {
-			locale = null;
-			codec = new Metaphone();
-			return;
-		}
-
-		/**
 		 * Constructor taking a {@link Locale}
 		 * 
 		 * @since 0.2
@@ -243,12 +236,12 @@ public class Dictionary {
 		}
 
 		/**
-		 * Adds words from all built-in word lists for {@link #locale}. If {@link #locale} is not set, or not known, this method is a no-op
-		 * 
+		 * Adds words from all built-in word lists for the language of {@link #locale}.
+		 *
 		 * @return this object
 		 */
 		public Builder addWords() {
-			if (locale == Locale.ENGLISH) {
+			if ("en".equals(locale.getLanguage())) {
 				addWords(WORDS_1);
 				addWords(WORDS_2);
 				addWords(NAMES_1);
