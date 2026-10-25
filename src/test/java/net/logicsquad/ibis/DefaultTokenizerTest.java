@@ -1,10 +1,8 @@
 package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -16,6 +14,8 @@ import org.junit.jupiter.api.Test;
  * @author paulh
  */
 public class DefaultTokenizerTest {
+	private static final Tokenizer TOKENIZER = new DefaultTokenizer(Locale.ENGLISH);
+
 	private static final String TEST_1 = """
 			Now (is the time) for all, good—men to come to the aid of the party.
 			""";
@@ -57,7 +57,6 @@ public class DefaultTokenizerTest {
 			WORD_6L);
 
 	private static final String TEST_7 = "It looks like the client’s, doesn't it?";
-	private static final String COOKED_7 = "It looks like the client's, doesn't it?";
 	private static final List<Word> EXPECTED_7 = List.of(new Word("It", 0), new Word("looks", 3), new Word("like", 9), new Word("the", 14), new Word("client", 18),
 			new Word("doesn't", 28), new Word("it", 36));
 
@@ -99,165 +98,141 @@ public class DefaultTokenizerTest {
 	private static final List<Word> EXPECTED_ABBREVIATION_AT_END_2 = List.of(new Word("that", 0), new Word("is", 5), new Word("i.e", 9));
 
 	@Test
-	public void constructorThrowsOnNull() {
-		assertThrows(NullPointerException.class, () -> new DefaultTokenizer(Locale.ENGLISH, null));
+	public void tokenizeThrowsOnNull() {
+		assertThrows(NullPointerException.class, () -> TOKENIZER.tokenize(null));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/17
+	@Test
+	public void tokenizerCanBeReused() {
+		testTokenizerAndWordList(TEST_3, EXPECTED_3);
+		testTokenizerAndWordList(TEST_3, EXPECTED_3);
 		return;
 	}
 
 	@Test
 	public void DefaultTokenizerRemovesPunct() {
-		testTokenizerAndStringList(new DefaultTokenizer(Locale.ENGLISH, TEST_1), EXPECTED_1);
+		testTokenizerAndStringList(TEST_1, EXPECTED_1);
 		return;
 	}
 
 	@Test
 	public void DefaultTokenizerHandlesSomeSpecialCases() {
-		testTokenizerAndStringList(new DefaultTokenizer(Locale.ENGLISH, TEST_2), EXPECTED_2);
+		testTokenizerAndStringList(TEST_2, EXPECTED_2);
 		return;
 	}
 
 	@Test
 	public void tokenizerRecordsExpectedIndexes() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_3), EXPECTED_3);
+		testTokenizerAndWordList(TEST_3, EXPECTED_3);
 	}
 
 	@Test
 	public void tokenizerRecordsExpectedIndexesForSpecialCases() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_4), EXPECTED_4);
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_5), EXPECTED_5);
+		testTokenizerAndWordList(TEST_4, EXPECTED_4);
+		testTokenizerAndWordList(TEST_5, EXPECTED_5);
 		return;
 	}
 
-	private void testTokenizerAndStringList(Tokenizer tokenizer, List<String> words) {
-        for (String word : words) {
-            assertEquals(word, tokenizer.next().text());
-        }
+	private void testTokenizerAndStringList(String text, List<String> words) {
+		assertEquals(words, TOKENIZER.tokenize(text).map(Word::text).toList());
 		return;
 	}
 
-	private void testTokenizerAndWordList(Tokenizer tokenizer, List<Word> words) {
-        for (Word word : words) {
-            assertEquals(word, tokenizer.next());
-        }
+	private void testTokenizerAndWordList(String text, List<Word> words) {
+		assertEquals(words, TOKENIZER.tokenize(text).toList());
 		return;
 	}
 
 	/**
-	 * Simply runs {@code tokenizer} until there are no more tokens.
-	 *
-	 * @param tokenizer a {@link Tokenizer}
+	 * Simply runs {@link #TOKENIZER} over {@code text}.
+	 * @param text a string
 	 */
-	private void testTokenizer(Tokenizer tokenizer) {
-		while (tokenizer.hasNext()) {
-			tokenizer.next();
-		}
+	private void testTokenizer(String text) {
+		TOKENIZER.tokenize(text).forEach(w -> {});
 		return;
 	}
 
 	// This method just has to run without causing StringIndexOutOfBoundsException
 	@Test
-	public void whileLoopWithHasNextWillReadAllTokens() {
-		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, TEST_1);
-		while (tokenizer.hasNext()) {
-			tokenizer.next();
+	public void tokenizeWillReadAllTokens() {
+		testTokenizer(TEST_1);
+		return;
+	}
+
+	@Test
+	public void tokenizeReturnsNoWordsForBlankString() {
+		for (String blank : List.of(BLANK_1, BLANK_2, BLANK_3, BLANK_4)) {
+			assertEquals(0, TOKENIZER.tokenize(blank).count());
 		}
 		return;
 	}
 
 	@Test
-	public void hasNextReturnsFalseForBlankString() {
-		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_1);
-		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_2);
-		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_3);
-		assertFalse(tokenizer.hasNext());
-		tokenizer = new DefaultTokenizer(Locale.ENGLISH, BLANK_4);
-		assertFalse(tokenizer.hasNext());
-		return;
-	}
-
-	@Test
 	public void tokenizerHandlesMixedDashesAndSpecialCases() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_6), EXPECTED_6);
+		testTokenizerAndWordList(TEST_6, EXPECTED_6);
 		return;
 	}
 
 	@Test
 	public void tokenizerHandlesApostrophes() {
-		Tokenizer tokenizer = new DefaultTokenizer(Locale.ENGLISH, TEST_7);
-		testTokenizerAndWordList(tokenizer, EXPECTED_7);
-		assertEquals(COOKED_7, tokenizer.text());
-		assertEquals(TEST_7, tokenizer.rawText());
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_8), EXPECTED_8);
+		testTokenizerAndWordList(TEST_7, EXPECTED_7);
+		testTokenizerAndWordList(TEST_8, EXPECTED_8);
 		return;
 	}
 
 	// Another test for dash removal after breaking the parser.
 	@Test
 	public void tokenizerHandlesDashes() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_9), EXPECTED_9);
+		testTokenizerAndWordList(TEST_9, EXPECTED_9);
 		return;
 	}
 
 	// Tokenizer seems to be choking on timestamps
 	@Test
 	public void tokenizerShouldCopeWithTimestamp() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_10), EXPECTED_10);
+		testTokenizerAndWordList(TEST_10, EXPECTED_10);
 		return;
 	}
 
 	// "E.g." and "I.e."
 	@Test
 	public void tokenizerHandlesSpecialCasesWithInitialCaps() {
-		testTokenizerAndWordList(new DefaultTokenizer(Locale.ENGLISH, TEST_11), EXPECTED_11);
+		testTokenizerAndWordList(TEST_11, EXPECTED_11);
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/5
 	@Test
 	public void tokenizerHandlesOddCasesWithDashes() {
-		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_1));
-		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_2));
-		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_3));
-		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_4));
+		testTokenizer(EM_DASH_1);
+		testTokenizer(EM_DASH_2);
+		testTokenizer(EM_DASH_3);
+		testTokenizer(EM_DASH_4);
 		return;
-	}
-
-	/**
-	 * Returns all remaining {@link Word}s from {@code tokenizer}.
-	 *
-	 * @param tokenizer a {@link Tokenizer}
-	 * @return list of remaining {@link Word}s
-	 */
-	private List<Word> allWords(Tokenizer tokenizer) {
-		List<Word> result = new ArrayList<>();
-		while (tokenizer.hasNext()) {
-			result.add(tokenizer.next());
-		}
-		return result;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/7
 	@Test
 	public void tokenizerContinuesAfterDroppingHandledWord() {
-		assertEquals(EXPECTED_POSSESSIVE_SINGLE_CHAR, allWords(new DefaultTokenizer(Locale.ENGLISH, POSSESSIVE_SINGLE_CHAR)));
-		assertEquals(EXPECTED_HYPHENATED_SINGLE_CHARS, allWords(new DefaultTokenizer(Locale.ENGLISH, HYPHENATED_SINGLE_CHARS)));
+		assertEquals(EXPECTED_POSSESSIVE_SINGLE_CHAR, TOKENIZER.tokenize(POSSESSIVE_SINGLE_CHAR).toList());
+		assertEquals(EXPECTED_HYPHENATED_SINGLE_CHARS, TOKENIZER.tokenize(HYPHENATED_SINGLE_CHARS).toList());
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/7
 	@Test
 	public void tokenizerDropsSingleCharPartOfHyphenatedWord() {
-		assertEquals(EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR, allWords(new DefaultTokenizer(Locale.ENGLISH, HYPHENATED_TRAILING_SINGLE_CHAR)));
+		assertEquals(EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR, TOKENIZER.tokenize(HYPHENATED_TRAILING_SINGLE_CHAR).toList());
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/8
 	@Test
 	public void tokenizerHandlesAbbreviationAtEndOfText() {
-		assertEquals(EXPECTED_ABBREVIATION_AT_END_1, allWords(new DefaultTokenizer(Locale.ENGLISH, ABBREVIATION_AT_END_1)));
-		assertEquals(EXPECTED_ABBREVIATION_AT_END_2, allWords(new DefaultTokenizer(Locale.ENGLISH, ABBREVIATION_AT_END_2)));
+		assertEquals(EXPECTED_ABBREVIATION_AT_END_1, TOKENIZER.tokenize(ABBREVIATION_AT_END_1).toList());
+		assertEquals(EXPECTED_ABBREVIATION_AT_END_2, TOKENIZER.tokenize(ABBREVIATION_AT_END_2).toList());
 		return;
 	}
 }

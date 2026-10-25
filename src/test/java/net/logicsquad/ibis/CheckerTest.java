@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsEmptyListIfAllCorrect() {
 		Checker checker = new Checker(dictionary);
-		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CORRECT));
+		List<Misspelling> result = checker.checkSpelling(CORRECT);
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -47,7 +48,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsListOfIncorrectWords() {
 		Checker checker = new Checker(dictionary);
-		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT));
+		List<Misspelling> result = checker.checkSpelling(INCORRECT);
 		assertEquals(1, result.size());
 		assertEquals("epsilon", result.getFirst().word().text());
 		return;
@@ -56,7 +57,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void singleCharsShouldBeDroppedEvenFromHyphenatedRange() {
 		Checker checker = new Checker(dictionary);
-		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CHAR_RANGE));
+		List<Misspelling> result = checker.checkSpelling(CHAR_RANGE);
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -65,7 +66,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingContinuesAfterDroppedSingleChars() {
 		Checker checker = new Checker(dictionary);
-		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT_AFTER_SINGLE_CHARS));
+		List<Misspelling> result = checker.checkSpelling(INCORRECT_AFTER_SINGLE_CHARS);
 		assertEquals(List.of("epsilon"), result.stream().map(m -> m.word().text()).toList());
 		return;
 	}
@@ -75,7 +76,7 @@ public class CheckerTest extends AbstractTest {
 		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(CORRECT_TXT);
-		assertTrue(checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, text)).isEmpty());
+		assertTrue(checker.checkSpelling(text).isEmpty());
 		return;
 	}
 
@@ -84,7 +85,16 @@ public class CheckerTest extends AbstractTest {
 		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(INCORRECT_TXT);
-		assertEquals(5, checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, text)).size());
+		assertEquals(5, checker.checkSpelling(text).size());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/17
+	@Test
+	public void checkSpellingUsesGivenTokenizer() {
+		Checker checker = new Checker(dictionary, text -> Stream.of(text.split(" ")).map(t -> new Word(t, 0)));
+		List<Misspelling> result = checker.checkSpelling("alpha A-D epsilon");
+		assertEquals(List.of("A-D", "epsilon"), result.stream().map(m -> m.word().text()).toList());
 		return;
 	}
 }
