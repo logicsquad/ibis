@@ -1,6 +1,8 @@
 package net.logicsquad.ibis;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -196,9 +199,9 @@ public class Dictionary {
 	 */
 	public static class Builder {
 		/**
-		 * Extension for compressed lists
+		 * First two bytes of a stream compressed with GZip
 		 */
-		private static final String GZIP_EXTENSION = ".gz";
+		private static final int GZIP_MAGIC = GZIPInputStream.GZIP_MAGIC;
 
 		/**
 		 * Map from phonetic codes to lists of words
@@ -236,91 +239,141 @@ public class Dictionary {
 		 * Adds words from all built-in word lists for the language of {@link #locale}.
 		 *
 		 * @return this object
+		 * @since 0.4
 		 */
-		public Builder addWords() {
-			language.builtInWordLists().forEach(this::addWords);
+		public Builder addBuiltInWords() {
+			language.builtInWordLists().forEach(name -> addWords(Dictionary.class, name));
 			return this;
 		}
 
 		/**
-		 * Adds words from {@code resourceName} on classpath. The resource must be encoded in UTF-8, and is decompressed with GZip if its name
-		 * ends with {@code .gz}.
+		 * Adds words from the resource {@code resourceName}, found through {@code context} with {@link Class#getResourceAsStream(String)}, so
+		 * that a name starting with {@code /} is absolute, and any other name is relative to the package of {@code context}. The resource must
+		 * be encoded in UTF-8, and is decompressed if it is compressed with GZip.
 		 *
-		 * @param resourceName name of a resource on classpath
+		 * @param context      a {@link Class} whose class loader and package are used to find the resource
+		 * @param resourceName name of a resource
 		 * @return this object
-		 * @throws NullPointerException     if {@code resourceName} is {@code null}
-		 * @throws IllegalArgumentException if the resource cannot be found or read
+		 * @throws NullPointerException if either argument is {@code null}
+		 * @throws UncheckedIOException if the resource cannot be found or read
+		 * @since 0.4
 		 */
-		public Builder addWords(String resourceName) {
+		public Builder addWords(Class<?> context, String resourceName) {
+			Objects.requireNonNull(context);
 			Objects.requireNonNull(resourceName);
 			LOG.debug("Adding words from resource '{}'...", resourceName);
-			InputStream is = Dictionary.class.getResourceAsStream(resourceName);
-			if (is == null) {
-				LOG.error("Unable to find resource {}.", resourceName);
-				throw new IllegalArgumentException("Unable to find resource " + resourceName + ".");
-			}
-			return readWords(is, resourceName);
-		}
-
-		/**
-		 * Adds words from {@code reader}, then closes it.
-		 *
-		 * @param reader a {@link Reader}
-		 * @return this object
-		 * @throws NullPointerException     if {@code reader} is {@code null}
-		 * @throws IllegalArgumentException if {@code reader} cannot be read
-		 */
-		public Builder addWords(Reader reader) {
-			Objects.requireNonNull(reader);
-			try (BufferedReader bufferedReader = new BufferedReader(reader)) {
-				bufferedReader.lines().forEach(this::addWord);
+			try (InputStream is = context.getResourceAsStream(resourceName)) {
+				if (is == null) {
+					throw new FileNotFoundException("Unable to find resource " + resourceName + ".");
+				}
+				return readWords(is);
 			} catch (IOException | UncheckedIOException e) {
-				LOG.error("Unable to add words from Reader.", e);
-				throw new IllegalArgumentException("Unable to add words from Reader.", e);
+				LOG.error("Unable to add words from {}.", resourceName, e);
+				throw new UncheckedIOException("Unable to add words from " + resourceName + ".", unwrap(e));
 			}
-			return this;
 		}
 
 		/**
-		 * Adds words from file at {@code path}. The file must be encoded in UTF-8, and is decompressed with GZip if its name ends with
-		 * {@code .gz}.
+		 * Adds words from file at {@code path}. The file must be encoded in UTF-8, and is decompressed if it is compressed with GZip.
 		 *
 		 * @param path a {@link Path}
 		 * @return this object
-		 * @throws NullPointerException     if {@code path} is {@code null}
-		 * @throws IllegalArgumentException if the file cannot be read
+		 * @throws NullPointerException if {@code path} is {@code null}
+		 * @throws UncheckedIOException if the file cannot be read
 		 */
 		public Builder addWords(Path path) {
 			Objects.requireNonNull(path);
 			LOG.debug("Adding words from path '{}'...", path);
-			InputStream is;
-			try {
-				is = Files.newInputStream(path);
-			} catch (IOException e) {
+			try (InputStream is = Files.newInputStream(path)) {
+				return readWords(is);
+			} catch (IOException | UncheckedIOException e) {
 				LOG.error("Unable to add words from {}.", path, e);
-				throw new IllegalArgumentException("Unable to add words from " + path + ".", e);
+				throw new UncheckedIOException("Unable to add words from " + path + ".", unwrap(e));
 			}
-			return readWords(is, path.toString());
 		}
 
 		/**
-		 * Adds words from {@code is}, then closes it. {@code is} must contain text encoded in UTF-8, and is decompressed with GZip if
-		 * {@code name} ends with {@code .gz}.
+		 * Adds words from {@code is}, which must contain text encoded in UTF-8, and is decompressed if it is compressed with GZip. The caller
+		 * remains responsible for closing {@code is}.
 		 *
-		 * @param is   an {@link InputStream}
-		 * @param name name of the word list {@code is} reads
+		 * @param is an {@link InputStream}
 		 * @return this object
-		 * @throws IllegalArgumentException if {@code is} cannot be read, or does not contain valid UTF-8
+		 * @throws NullPointerException if {@code is} is {@code null}
+		 * @throws UncheckedIOException if {@code is} cannot be read
+		 * @since 0.4
 		 */
-		private Builder readWords(InputStream is, String name) {
-			try (InputStream in = is;
-					BufferedReader reader = new BufferedReader(new InputStreamReader(isGzipped(name) ? new GZIPInputStream(in) : in, StandardCharsets.UTF_8.newDecoder()))) {
-				reader.lines().forEach(this::addWord);
+		public Builder addWords(InputStream is) {
+			Objects.requireNonNull(is);
+			try {
+				return readWords(is);
 			} catch (IOException | UncheckedIOException e) {
-				LOG.error("Unable to add words from {}.", name, e);
-				throw new IllegalArgumentException("Unable to add words from " + name + ".", e);
+				LOG.error("Unable to add words from InputStream.", e);
+				throw new UncheckedIOException("Unable to add words from InputStream.", unwrap(e));
+			}
+		}
+
+		/**
+		 * Adds words from {@code reader}, one per line. The caller remains responsible for closing {@code reader}.
+		 *
+		 * @param reader a {@link Reader}
+		 * @return this object
+		 * @throws NullPointerException if {@code reader} is {@code null}
+		 * @throws UncheckedIOException if {@code reader} cannot be read
+		 */
+		public Builder addWords(Reader reader) {
+			Objects.requireNonNull(reader);
+			try {
+				// Not closed, because closing the BufferedReader would close reader
+				new BufferedReader(reader).lines().forEach(this::addWord);
+			} catch (UncheckedIOException e) {
+				LOG.error("Unable to add words from Reader.", e);
+				throw new UncheckedIOException("Unable to add words from Reader.", e.getCause());
 			}
 			return this;
+		}
+
+		/**
+		 * Adds each of {@code words}, as {@link #addWord(String)} does.
+		 *
+		 * @param words a {@link Collection} of words
+		 * @return this object
+		 * @throws NullPointerException if {@code words} is {@code null}, or contains {@code null}
+		 * @since 0.4
+		 */
+		public Builder addWords(Collection<String> words) {
+			Objects.requireNonNull(words);
+			words.forEach(this::addWord);
+			return this;
+		}
+
+		/**
+		 * Adds words from {@code is}, without closing it. {@code is} must contain text encoded in UTF-8, and is decompressed if it starts with
+		 * the GZip magic number.
+		 *
+		 * @param is an {@link InputStream}
+		 * @return this object
+		 * @throws IOException          if {@code is} cannot be read
+		 * @throws UncheckedIOException if {@code is} cannot be read, or does not contain valid UTF-8
+		 */
+		private Builder readWords(InputStream is) throws IOException {
+			InputStream in = new BufferedInputStream(is);
+			in.mark(2);
+			int magic = in.read() | (in.read() << 8);
+			in.reset();
+			// Neither GZIPInputStream nor the readers below are closed, because closing them would close is
+			Reader reader = new InputStreamReader(magic == GZIP_MAGIC ? new GZIPInputStream(in) : in, StandardCharsets.UTF_8.newDecoder());
+			new BufferedReader(reader).lines().forEach(this::addWord);
+			return this;
+		}
+
+		/**
+		 * Returns the {@link IOException} behind {@code e}.
+		 *
+		 * @param e an {@link IOException} or {@link UncheckedIOException}
+		 * @return {@code e}, or the cause of an {@link UncheckedIOException}
+		 */
+		private static IOException unwrap(Exception e) {
+			return e instanceof UncheckedIOException u ? u.getCause() : (IOException) e;
 		}
 
 		/**
@@ -343,17 +396,6 @@ public class Dictionary {
 				LOG.debug("'{}' is already in this Dictionary.", cookedWord);
 			}
 			return this;
-		}
-
-		/**
-		 * Does {@code name} represent a file compressed with GZip?
-		 *
-		 * @param name name of a resource or file
-		 * @return {@code true} if it looks like the file is compressed with GZip, otherwise {@code false}
-		 */
-		private static boolean isGzipped(String name) {
-			Objects.requireNonNull(name);
-			return name.endsWith(GZIP_EXTENSION);
 		}
 
 		/**

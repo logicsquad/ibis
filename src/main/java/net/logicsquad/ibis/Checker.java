@@ -29,7 +29,7 @@ public class Checker {
 	 * @since 0.2
 	 */
 	public Checker() {
-		this(Dictionary.builder(Locale.ENGLISH).addWords().build());
+		this(Dictionary.builder(Locale.ENGLISH).addBuiltInWords().build());
 		return;
 	}
 

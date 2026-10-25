@@ -2,14 +2,19 @@ package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -70,9 +75,9 @@ public class DictionaryTest {
 
 	// https://github.com/logicsquad/ibis/issues/9
 	@Test
-	public void addWordsAddsBuiltInWordsForAnyEnglishLocale() {
+	public void addBuiltInWordsAddsWordsForAnyEnglishLocale() {
 		for (Locale locale : List.of(Locale.ENGLISH, Locale.US, Locale.UK, Locale.forLanguageTag("en-AU"))) {
-			assertTrue(Dictionary.builder(locale).addWords().build().isCorrect("the"), locale.toString());
+			assertTrue(Dictionary.builder(locale).addBuiltInWords().build().isCorrect("the"), locale.toString());
 		}
 		return;
 	}
@@ -80,7 +85,7 @@ public class DictionaryTest {
 	// https://github.com/logicsquad/ibis/issues/9
 	@Test
 	public void builderWithoutLocaleAddsEnglishBuiltInWords() {
-		assertTrue(Dictionary.builder().addWords().build().isCorrect("the"));
+		assertTrue(Dictionary.builder().addBuiltInWords().build().isCorrect("the"));
 		return;
 	}
 
@@ -115,28 +120,28 @@ public class DictionaryTest {
 	// https://github.com/logicsquad/ibis/issues/13
 	@Test
 	public void addWordsThrowsForMissingResource() {
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords("/no/such/resource.txt"));
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(DictionaryTest.class, "/no/such/resource.txt"));
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/13
 	@Test
 	public void addWordsThrowsForMissingPath(@TempDir Path dir) {
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(dir.resolve("missing.txt")));
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(dir.resolve("missing.txt")));
 		return;
 	}
 
-	// https://github.com/logicsquad/ibis/issues/13
+	// https://github.com/logicsquad/ibis/issues/20
 	@Test
-	public void addWordsThrowsForResourceThatIsNotGzipped() {
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(NOT_GZIPPED_RESOURCE));
+	public void addWordsReadsPlainTextResourceWithGzipName() {
+		assertTrue(Dictionary.builder().addWords(DictionaryTest.class, NOT_GZIPPED_RESOURCE).build().isCorrect("zyzzyva"));
 		return;
 	}
 
 	// https://github.com/logicsquad/ibis/issues/13
 	@Test
 	public void addWordsThrowsForMalformedUtf8() {
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(LATIN_1_RESOURCE));
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(DictionaryTest.class, LATIN_1_RESOURCE));
 		return;
 	}
 
@@ -145,7 +150,7 @@ public class DictionaryTest {
 	public void addWordsThrowsForMalformedUtf8InPath(@TempDir Path dir) throws IOException {
 		Path path = dir.resolve("latin-1.txt");
 		Files.write(path, "café\n".getBytes(StandardCharsets.ISO_8859_1));
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(path));
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(path));
 		return;
 	}
 
@@ -174,7 +179,7 @@ public class DictionaryTest {
 				return;
 			}
 		};
-		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder().addWords(reader));
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(reader));
 		return;
 	}
 
@@ -240,6 +245,66 @@ public class DictionaryTest {
 	@Test
 	public void builderThrowsForUnsupportedLanguage() {
 		assertThrows(IllegalArgumentException.class, () -> Dictionary.builder(Locale.GERMAN));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/20
+	@Test
+	public void addWordsDecompressesGzippedStreamWhateverItsName(@TempDir Path dir) throws IOException {
+		Path path = dir.resolve("words.txt");
+		try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(path))) {
+			out.write("zyzzyva\n".getBytes(StandardCharsets.UTF_8));
+		}
+		assertTrue(Dictionary.builder().addWords(path).build().isCorrect("zyzzyva"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/20
+	@Test
+	public void addWordsLeavesInputStreamOpen() {
+		AtomicBoolean closed = new AtomicBoolean();
+		InputStream is = new ByteArrayInputStream("zyzzyva\n".getBytes(StandardCharsets.UTF_8)) {
+			@Override
+			public void close() {
+				closed.set(true);
+				return;
+			}
+		};
+		assertTrue(Dictionary.builder().addWords(is).build().isCorrect("zyzzyva"));
+		assertFalse(closed.get());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/20
+	@Test
+	public void addWordsLeavesReaderOpen() {
+		AtomicBoolean closed = new AtomicBoolean();
+		Reader reader = new StringReader("zyzzyva\n") {
+			@Override
+			public void close() {
+				closed.set(true);
+				return;
+			}
+		};
+		assertTrue(Dictionary.builder().addWords(reader).build().isCorrect("zyzzyva"));
+		assertFalse(closed.get());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/20
+	@Test
+	public void addWordsAddsCollection() {
+		Dictionary d = Dictionary.builder().addWords(List.of("zyzzyva", " aardvark ")).build();
+		assertTrue(d.isCorrect("zyzzyva"));
+		assertTrue(d.isCorrect("aardvark"));
+		return;
+	}
+
+	// A relative resource name resolves in the package of the context class
+	// https://github.com/logicsquad/ibis/issues/20
+	@Test
+	public void addWordsResolvesRelativeResourceNameThroughContext() {
+		assertThrows(UncheckedIOException.class, () -> Dictionary.builder().addWords(DictionaryTest.class, NOT_GZIPPED_RESOURCE.substring(1)));
 		return;
 	}
 }

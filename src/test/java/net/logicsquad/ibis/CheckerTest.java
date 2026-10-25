@@ -73,7 +73,7 @@ public class CheckerTest extends AbstractTest {
 
 	@Test
 	public void knownCorrectTextReturnsNoIncorrectWords() {
-		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addWords().build();
+		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addBuiltInWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(CORRECT_TXT);
 		assertTrue(checker.checkSpelling(text).isEmpty());
@@ -82,7 +82,7 @@ public class CheckerTest extends AbstractTest {
 
 	@Test
 	public void knownIncorrectTextReturnsIncorrectWords() {
-		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addWords().build();
+		Dictionary builtIn = Dictionary.builder(Locale.ENGLISH).addBuiltInWords().build();
 		Checker checker = new Checker(builtIn);
 		String text = stringFromResource(INCORRECT_TXT);
 		assertEquals(5, checker.checkSpelling(text).size());
