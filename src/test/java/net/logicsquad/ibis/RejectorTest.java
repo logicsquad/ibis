@@ -38,43 +38,43 @@ public class RejectorTest {
 	}
 
 	private void testContainsDigitForString(String text) {
-		assertTrue(containsDigit(Word.of(text, 0)));
+		assertTrue(containsDigit(new Word(text, 0)));
 		return;
 	}
 
 	@Test
 	public void rejectorRejectsWordsWithDigits() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_1, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_2, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_3, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_4, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_5, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_6, 0)));
-		assertTrue(rejector.shouldReject(Word.of(CONTAINS_DIGIT_7, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_1, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_2, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_3, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_4, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_5, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_6, 0)));
+		assertTrue(rejector.shouldReject(new Word(CONTAINS_DIGIT_7, 0)));
 		return;
 	}
 
 	@Test
 	public void rejectorRejectsSingleHyphen() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.shouldReject(Word.of(HYPHEN, 0)));
+		assertTrue(rejector.shouldReject(new Word(HYPHEN, 0)));
 		return;
 	}
 
 	@Test
 	public void isDomainNameReturnsTrueForDomainNames() {
-		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_1, 0)));
-		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_2, 0)));
-		assertTrue(Rejector.isDomainName(Word.of(DOMAIN_3, 0)));
+		assertTrue(Rejector.isDomainName(new Word(DOMAIN_1, 0)));
+		assertTrue(Rejector.isDomainName(new Word(DOMAIN_2, 0)));
+		assertTrue(Rejector.isDomainName(new Word(DOMAIN_3, 0)));
 		return;
 	}
 
 	@Test
 	public void rejectorRejectsSingleCharacterWords() {
 		Rejector rejector = new Rejector();
-		assertTrue(rejector.shouldReject(Word.of("A", 0)));
-		assertTrue(rejector.shouldReject(Word.of("b", 0)));
+		assertTrue(rejector.shouldReject(new Word("A", 0)));
+		assertTrue(rejector.shouldReject(new Word("b", 0)));
 		return;
 	}
 }

@@ -169,7 +169,7 @@ public class DefaultTokenizer implements Tokenizer {
 	 */
 	private Word candidateNext() {
 		while (end != BreakIterator.DONE) {
-			Word word = Word.of(text.substring(start, end), start);
+			Word word = new Word(text.substring(start, end), start);
 			start = end;
 			end = breakIterator.next();
 			if (!rejector.shouldReject(word)) {

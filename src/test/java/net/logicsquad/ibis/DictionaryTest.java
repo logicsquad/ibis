@@ -38,15 +38,15 @@ public class DictionaryTest {
 
 	@Test
 	public void isCorrectReturnsTrueIfWordPresent() {
-		assertTrue(dictionary.isCorrect(Word.of("alpha", 0)));
-		assertTrue(dictionary.isCorrect(Word.of("beta", 0)));
+		assertTrue(dictionary.isCorrect(new Word("alpha", 0)));
+		assertTrue(dictionary.isCorrect(new Word("beta", 0)));
 		return;
 	}
 
 	@Test
 	public void isCorrectReturnsFalseIfWordNotPresent() {
-		assertFalse(dictionary.isCorrect(Word.of("gamma", 0)));
-		assertFalse(dictionary.isCorrect(Word.of("delta", 0)));
+		assertFalse(dictionary.isCorrect(new Word("gamma", 0)));
+		assertFalse(dictionary.isCorrect(new Word("delta", 0)));
 		return;
 	}
 
@@ -54,8 +54,8 @@ public class DictionaryTest {
 	@Test
 	public void isCorrectShouldTryInitialCaps() {
 		Dictionary d = Dictionary.builder().addWord("Australian").build();
-		assertTrue(d.isCorrect(Word.of("Australian", 0)));
-		assertTrue(d.isCorrect(Word.of("AUSTRALIAN", 0)));
+		assertTrue(d.isCorrect(new Word("Australian", 0)));
+		assertTrue(d.isCorrect(new Word("AUSTRALIAN", 0)));
 		return;
 	}
 
@@ -64,7 +64,7 @@ public class DictionaryTest {
 	@Test
 	public void isCorrectReturnsFalseForEmptyWord() {
 		Dictionary d = Dictionary.builder().addWord("why").build();
-		assertFalse(d.isCorrect(Word.of("", 0)));
+		assertFalse(d.isCorrect(new Word("", 0)));
 		return;
 	}
 
@@ -72,7 +72,7 @@ public class DictionaryTest {
 	@Test
 	public void addWordsAddsBuiltInWordsForAnyEnglishLocale() {
 		for (Locale locale : List.of(Locale.ENGLISH, Locale.US, Locale.UK, Locale.forLanguageTag("en-AU"))) {
-			assertTrue(Dictionary.builder(locale).addWords().build().isCorrect(Word.of("the", 0)), locale.toString());
+			assertTrue(Dictionary.builder(locale).addWords().build().isCorrect(new Word("the", 0)), locale.toString());
 		}
 		return;
 	}
@@ -80,7 +80,7 @@ public class DictionaryTest {
 	// https://github.com/logicsquad/ibis/issues/9
 	@Test
 	public void builderWithoutLocaleAddsEnglishBuiltInWords() {
-		assertTrue(Dictionary.builder().addWords().build().isCorrect(Word.of("the", 0)));
+		assertTrue(Dictionary.builder().addWords().build().isCorrect(new Word("the", 0)));
 		return;
 	}
 
@@ -91,8 +91,8 @@ public class DictionaryTest {
 		Locale defaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.forLanguageTag("tr"));
 		try {
-			assertTrue(d.isCorrect(Word.of("It", 0)));
-			assertTrue(d.isCorrect(Word.of("INSIDE", 0)));
+			assertTrue(d.isCorrect(new Word("It", 0)));
+			assertTrue(d.isCorrect(new Word("INSIDE", 0)));
 		} finally {
 			Locale.setDefault(defaultLocale);
 		}
@@ -106,9 +106,9 @@ public class DictionaryTest {
 		Dictionary d = builder.build();
 		// "alfa" has the same Metaphone code as "alpha", and "omega" has a new one
 		builder.addWord("alfa").addWord("omega");
-		assertFalse(d.isCorrect(Word.of("alfa", 0)));
-		assertFalse(d.isCorrect(Word.of("omega", 0)));
-		assertTrue(builder.build().isCorrect(Word.of("omega", 0)));
+		assertFalse(d.isCorrect(new Word("alfa", 0)));
+		assertFalse(d.isCorrect(new Word("omega", 0)));
+		assertTrue(builder.build().isCorrect(new Word("omega", 0)));
 		return;
 	}
 
@@ -156,7 +156,7 @@ public class DictionaryTest {
 		try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(path))) {
 			out.write("zyzzyva\n".getBytes(StandardCharsets.UTF_8));
 		}
-		assertTrue(Dictionary.builder().addWords(path).build().isCorrect(Word.of("zyzzyva", 0)));
+		assertTrue(Dictionary.builder().addWords(path).build().isCorrect(new Word("zyzzyva", 0)));
 		return;
 	}
 

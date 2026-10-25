@@ -16,32 +16,32 @@ import org.junit.jupiter.api.Test;
  */
 public class HandlerTest {
 	private static final String TEXT_1 = " e.g. ";
-	private static final Word WORD_1 = Word.of("e.g", 1);
-	private static final Word EXPECTED_1 = Word.of("e.g.", 1);
+	private static final Word WORD_1 = new Word("e.g", 1);
+	private static final Word EXPECTED_1 = new Word("e.g.", 1);
 
 	private static final String TEXT_2 = "em—dash";
-	private static final Word WORD_2A = Word.of("em", 0);
-	private static final Word WORD_2B = Word.of("dash", 3);
+	private static final Word WORD_2A = new Word("em", 0);
+	private static final Word WORD_2B = new Word("dash", 3);
 
 	private static final String TEXT_3 = "en–dash";
-	private static final Word WORD_3A = Word.of("en", 0);
-	private static final Word WORD_3B = Word.of("dash", 3);
+	private static final Word WORD_3A = new Word("en", 0);
+	private static final Word WORD_3B = new Word("dash", 3);
 
 	private static final String TEXT_4 = "non-conforming";
-	private static final Word WORD_4A = Word.of("non", 0);
-	private static final Word WORD_4B = Word.of("conforming", 4);
+	private static final Word WORD_4A = new Word("non", 0);
+	private static final Word WORD_4B = new Word("conforming", 4);
 
 	private static final String TEXT_5 = "tit-for-tat";
-	private static final Word WORD_5A = Word.of("tit", 0);
-	private static final Word WORD_5B = Word.of("for", 4);
-	private static final Word WORD_5C = Word.of("tat", 8);
+	private static final Word WORD_5A = new Word("tit", 0);
+	private static final Word WORD_5B = new Word("for", 4);
+	private static final Word WORD_5C = new Word("tat", 8);
 
 	private static final String TEXT_6 = "the licensee's list";
-	private static final Word WORD_6 = Word.of("licensee's", 4);
-	private static final Word EXPECTED_6 = Word.of("licensee", 4);
+	private static final Word WORD_6 = new Word("licensee's", 4);
+	private static final Word EXPECTED_6 = new Word("licensee", 4);
 	private static final String TEXT_7 = "entity's";
-	private static final Word WORD_7 = Word.of("entity's", 0);
-	private static final Word EXPECTED_7 = Word.of("entity", 0);
+	private static final Word WORD_7 = new Word("entity's", 0);
+	private static final Word EXPECTED_7 = new Word("entity", 0);
 
 	private static final String TEXT_8 = "--";
 
@@ -56,7 +56,7 @@ public class HandlerTest {
 	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
 		Queue<Word> queue = new LinkedList<>();
-		Word result = handler.handle(Word.of(text, 0), text, queue);
+		Word result = handler.handle(new Word(text, 0), text, queue);
 		assertEquals(first, result);
 		assertTrue(queue.size() == 1);
 		assertEquals(second, queue.remove());
@@ -85,7 +85,7 @@ public class HandlerTest {
 	public void handlerSplitsOnMultiHyphen() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
 		Queue<Word> queue = new LinkedList<>();
-		Word result = handler.handle(Word.of(TEXT_5, 0), TEXT_5, queue);
+		Word result = handler.handle(new Word(TEXT_5, 0), TEXT_5, queue);
 		assertEquals(WORD_5A, result);
 		assertTrue(queue.size() == 2);
 		assertEquals(WORD_5B, queue.remove());
@@ -107,7 +107,7 @@ public class HandlerTest {
 	@Test
 	public void handleThrowsIllegalArgumentExceptionForDashesOnly() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		assertThrows(IllegalArgumentException.class, () -> handler.handle(Word.of(TEXT_8, 0), TEXT_8, new LinkedList<>()));
+		assertThrows(IllegalArgumentException.class, () -> handler.handle(new Word(TEXT_8, 0), TEXT_8, new LinkedList<>()));
 		return;
 	}
 }

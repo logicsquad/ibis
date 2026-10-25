@@ -60,7 +60,7 @@ class DashesCase implements Case {
 				sb.append(word.text().charAt(i));
 				i++;
 			}
-			parts.add(Word.of(sb.toString(), start + word.start()));
+			parts.add(new Word(sb.toString(), start + word.start()));
 			while (i < word.length() && isDash(word.text().charAt(i))) {
 				i++;
 			}

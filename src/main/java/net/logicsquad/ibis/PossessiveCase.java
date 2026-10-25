@@ -22,7 +22,7 @@ class PossessiveCase implements Case {
 
 	@Override
 	public Word handle(Word word, String text, Queue<Word> queue) {
-		return Word.of(word.text().substring(0, word.length() - 2), word.start());
+		return new Word(word.text().substring(0, word.length() - 2), word.start());
 	}
 
 	@Override

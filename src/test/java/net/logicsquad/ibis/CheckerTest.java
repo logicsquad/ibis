@@ -39,7 +39,7 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsEmptyListIfAllCorrect() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CORRECT));
+		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CORRECT));
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -47,16 +47,16 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingReturnsListOfIncorrectWords() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT));
+		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT));
 		assertEquals(1, result.size());
-		assertEquals("epsilon", result.getFirst().text());
+		assertEquals("epsilon", result.getFirst().word().text());
 		return;
 	}
 
 	@Test
 	public void singleCharsShouldBeDroppedEvenFromHyphenatedRange() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CHAR_RANGE));
+		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CHAR_RANGE));
 		assertTrue(result.isEmpty());
 		return;
 	}
@@ -65,8 +65,8 @@ public class CheckerTest extends AbstractTest {
 	@Test
 	public void checkSpellingContinuesAfterDroppedSingleChars() {
 		Checker checker = new Checker(dictionary);
-		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT_AFTER_SINGLE_CHARS));
-		assertEquals(List.of("epsilon"), result.stream().map(Word::text).toList());
+		List<Misspelling> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT_AFTER_SINGLE_CHARS));
+		assertEquals(List.of("epsilon"), result.stream().map(m -> m.word().text()).toList());
 		return;
 	}
 
