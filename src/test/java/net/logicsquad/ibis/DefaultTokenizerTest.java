@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -82,6 +83,14 @@ public class DefaultTokenizerTest {
 			great Leviathan, called a Commonwealth or
   State—(in Latin, Civitas) which is but an artificial man
 			""";
+
+	// Words that the Handler reduces to a single character should be dropped without dropping the rest of the text
+	private static final String POSSESSIVE_SINGLE_CHAR = "Grade A's are fine.";
+	private static final List<Word> EXPECTED_POSSESSIVE_SINGLE_CHAR = List.of(Word.of("Grade", 0), Word.of("are", 10), Word.of("fine", 14));
+	private static final String HYPHENATED_SINGLE_CHARS = "We did A-B testing.";
+	private static final List<Word> EXPECTED_HYPHENATED_SINGLE_CHARS = List.of(Word.of("We", 0), Word.of("did", 3), Word.of("testing", 11));
+	private static final String HYPHENATED_TRAILING_SINGLE_CHAR = "Type-A blood";
+	private static final List<Word> EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR = List.of(Word.of("Type", 0), Word.of("blood", 7));
 
 	@Test
 	public void constructorThrowsOnNull() {
@@ -206,6 +215,35 @@ public class DefaultTokenizerTest {
 		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_2));
 		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_3));
 		testTokenizer(new DefaultTokenizer(Locale.ENGLISH, EM_DASH_4));
+		return;
+	}
+
+	/**
+	 * Returns all remaining {@link Word}s from {@code tokenizer}.
+	 *
+	 * @param tokenizer a {@link Tokenizer}
+	 * @return list of remaining {@link Word}s
+	 */
+	private List<Word> allWords(Tokenizer tokenizer) {
+		List<Word> result = new ArrayList<>();
+		while (tokenizer.hasNext()) {
+			result.add(tokenizer.next());
+		}
+		return result;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/7
+	@Test
+	public void tokenizerContinuesAfterDroppingHandledWord() {
+		assertEquals(EXPECTED_POSSESSIVE_SINGLE_CHAR, allWords(new DefaultTokenizer(Locale.ENGLISH, POSSESSIVE_SINGLE_CHAR)));
+		assertEquals(EXPECTED_HYPHENATED_SINGLE_CHARS, allWords(new DefaultTokenizer(Locale.ENGLISH, HYPHENATED_SINGLE_CHARS)));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/7
+	@Test
+	public void tokenizerDropsSingleCharPartOfHyphenatedWord() {
+		assertEquals(EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR, allWords(new DefaultTokenizer(Locale.ENGLISH, HYPHENATED_TRAILING_SINGLE_CHAR)));
 		return;
 	}
 }

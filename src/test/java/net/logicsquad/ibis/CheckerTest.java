@@ -25,6 +25,9 @@ public class CheckerTest extends AbstractTest {
 	// The expectation here is that this is split into 'A' and 'D' and then both should be dropped as single-char words
 	private static final String CHAR_RANGE = "A-D";
 
+	// Dropping single-char words should not stop the words after them being checked
+	private static final String INCORRECT_AFTER_SINGLE_CHARS = "alpha A's beta A-D gamma epsilon";
+
 	private static Dictionary dictionary;
 
 	@BeforeAll
@@ -55,6 +58,15 @@ public class CheckerTest extends AbstractTest {
 		Checker checker = new Checker(dictionary);
 		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, CHAR_RANGE));
 		assertTrue(result.isEmpty());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/7
+	@Test
+	public void checkSpellingContinuesAfterDroppedSingleChars() {
+		Checker checker = new Checker(dictionary);
+		List<Word> result = checker.checkSpelling(new DefaultTokenizer(Locale.ENGLISH, INCORRECT_AFTER_SINGLE_CHARS));
+		assertEquals(List.of("epsilon"), result.stream().map(Word::text).toList());
 		return;
 	}
 
