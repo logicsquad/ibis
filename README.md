@@ -27,37 +27,54 @@ text against a `Dictionary` containing these words:
 
     Checker checker = new Checker();
     String text = "Now is the time forr all good men to come to the aod of the party.";
-    var incorrect = checker.checkSpelling(text);
-    for (Word w : incorrect) {
-      System.out.println("w = " + w);
+    for (Misspelling m : checker.checkSpelling(text)) {
+      System.out.println(m);
     }
 
-A `Word` object contains the start position of the word in the
-original text, the incorrect word itself, and a list of suggestions
-(based on phonetic matches with words in the dictionary).
+A `Misspelling` contains the incorrect `Word`, which holds its text and
+start position in the original text, and a list of suggestions (based
+on phonetic matches with words in the dictionary), which may be empty:
 
-    w = Word [start=16, text=forr, suggestions=(fair, fairy, far...
-    w = Word [start=49, text=aod, suggestions=(ad, add, ado, aid...
+    Misspelling[word=Word[text=forr, start=16], suggestions=[fair, fairy, far...
+    Misspelling[word=Word[text=aod, start=49], suggestions=[ad, add, ado, aid...
+
+A `Checker` is immutable and thread-safe, so you can create one and use
+it to check any number of texts.
 
 You can add your own word lists to a `Dictionary` using the `Builder`
 pattern:
 
-    Dictionary.Builder builder = Dictionary.builder().addWords().addWords("/words-1.txt").addWords("/words-2.txt.gz");
-    Dictionary dict = builder.build();
+    Dictionary dict = Dictionary.builder(Locale.ENGLISH)
+        .addBuiltInWords()
+        .addWords(MyApp.class, "/words-1.txt")
+        .addWords(Path.of("words-2.txt.gz"))
+        .build();
     Checker checker = new Checker(dict);
 
-In this example, `addWords()` adds the built-in word lists, and
-`words-1.txt` and `words-2.txt.gz` are resources available on the
-classpath at runtime. Word lists must be encoded in UTF-8, and are
-decompressed with `gzip` if their names end in `.gz`.
+In this example, `addBuiltInWords()` adds the built-in word lists,
+`words-1.txt` is a resource found on the classpath through `MyApp`, and
+`words-2.txt.gz` is a file. You can also add words from an
+`InputStream`, a `Reader` or a `Collection<String>`, or one at a time
+with `addWord()`. Word lists must be encoded in UTF-8, with one word on
+each line, and are decompressed if they are compressed with `gzip`.
+Ibis leaves any stream or reader you pass it open, for you to close.
+
+The built-in dictionary for each language is built once, on first use,
+and shared: `new Checker()` and `addBuiltInWords()` both use it rather
+than copying it, as does `Dictionary.builtIn(Locale)`. To add a few
+words to an existing `Dictionary` without copying it, use `with()`:
+
+    Dictionary dict = Dictionary.builtIn(Locale.ENGLISH).with(List.of("Ibis", "tokenizer"));
 
 Internationalisation
 --------------------
 Ibis is currently fairly Anglocentric: it offers only English word
-lists, and its support for localisation is limited to entry points
-allowing you to supply a `Locale` for various objects. The only
-`Locale` supported currently is `Locale.ENGLISH`. Support for other
-languages should be straightforward to add if someone was keen.
+lists, and the only language it supports is English. You choose a
+language once, when you build a `Dictionary`, and a `Checker` uses the
+tokenizer for that dictionary's `locale()`. Ibis throws
+`IllegalArgumentException` for a `Locale` whose language it doesn't
+support. Support for other languages should be straightforward to add
+if someone was keen.
 
 Contributing
 ------------
