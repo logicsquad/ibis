@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +34,10 @@ import org.slf4j.LoggerFactory;
  * <li>indicate whether a candidate word is spelled correctly; and</li>
  * <li>provide suggestions for incorrect words.</li>
  * </ul>
+ *
+ * <p>
+ * A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
+ * </p>
  * 
  * @author paulh
  * @since 0.1
@@ -340,12 +345,15 @@ public class Dictionary {
 		}
 
 		/**
-		 * Creates and returns a new {@code Dictionary} from this {@code Builder}.
+		 * Creates and returns a new {@code Dictionary} from this {@code Builder}. The new {@code Dictionary} holds a copy of the words added so
+		 * far, so adding words to this {@code Builder} afterwards does not change it.
 		 * 
 		 * @return new {@code Dictionary}
 		 */
 		public Dictionary build() {
-			return new Dictionary(codec, map);
+			Map<String, List<String>> copy = HashMap.newHashMap(map.size());
+			map.forEach((code, words) -> copy.put(code, List.copyOf(words)));
+			return new Dictionary(codec, Collections.unmodifiableMap(copy));
 		}
 	}
 

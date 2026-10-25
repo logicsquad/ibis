@@ -84,4 +84,17 @@ public class DictionaryTest {
 		}
 		return;
 	}
+
+	// https://github.com/logicsquad/ibis/issues/11
+	@Test
+	public void addingWordsAfterBuildDoesNotChangeDictionary() {
+		Dictionary.Builder builder = Dictionary.builder().addWord("alpha");
+		Dictionary d = builder.build();
+		// "alfa" has the same Metaphone code as "alpha", and "omega" has a new one
+		builder.addWord("alfa").addWord("omega");
+		assertFalse(d.isCorrect(Word.of("alfa", 0)));
+		assertFalse(d.isCorrect(Word.of("omega", 0)));
+		assertTrue(builder.build().isCorrect(Word.of("omega", 0)));
+		return;
+	}
 }
