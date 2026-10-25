@@ -3,9 +3,8 @@ package net.logicsquad.ibis;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
 
 import org.junit.jupiter.api.Test;
 
@@ -48,18 +47,13 @@ public class HandlerTest {
 	@Test
 	public void handleReturnsExpectedWordForEg() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		Word result = handler.handle(WORD_1, TEXT_1, new LinkedList<>());
-		assertEquals(EXPECTED_1, result);
+		assertEquals(List.of(EXPECTED_1), handler.handle(WORD_1, TEXT_1));
 		return;
 	}
 
 	private void testHandlerWithTextAndTwoWords(String text, Word first, Word second) {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		Queue<Word> queue = new LinkedList<>();
-		Word result = handler.handle(new Word(text, 0), text, queue);
-		assertEquals(first, result);
-		assertTrue(queue.size() == 1);
-		assertEquals(second, queue.remove());
+		assertEquals(List.of(first, second), handler.handle(new Word(text, 0), text));
 		return;
 	}
 
@@ -84,22 +78,15 @@ public class HandlerTest {
 	@Test
 	public void handlerSplitsOnMultiHyphen() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		Queue<Word> queue = new LinkedList<>();
-		Word result = handler.handle(new Word(TEXT_5, 0), TEXT_5, queue);
-		assertEquals(WORD_5A, result);
-		assertTrue(queue.size() == 2);
-		assertEquals(WORD_5B, queue.remove());
-		assertEquals(WORD_5C, queue.remove());
+		assertEquals(List.of(WORD_5A, WORD_5B, WORD_5C), handler.handle(new Word(TEXT_5, 0), TEXT_5));
 		return;
 	}
 
 	@Test
 	public void handleDealsWithPossessiveForms() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		Word result1 = handler.handle(WORD_6, TEXT_6, new LinkedList<>());
-		assertEquals(EXPECTED_6, result1);
-		Word result2 = handler.handle(WORD_7, TEXT_7, new LinkedList<>());
-		assertEquals(EXPECTED_7, result2);
+		assertEquals(List.of(EXPECTED_6), handler.handle(WORD_6, TEXT_6));
+		assertEquals(List.of(EXPECTED_7), handler.handle(WORD_7, TEXT_7));
 		return;
 	}
 
@@ -107,7 +94,7 @@ public class HandlerTest {
 	@Test
 	public void handleThrowsIllegalArgumentExceptionForDashesOnly() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
-		assertThrows(IllegalArgumentException.class, () -> handler.handle(new Word(TEXT_8, 0), TEXT_8, new LinkedList<>()));
+		assertThrows(IllegalArgumentException.class, () -> handler.handle(new Word(TEXT_8, 0), TEXT_8));
 		return;
 	}
 }

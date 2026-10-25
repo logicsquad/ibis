@@ -1,6 +1,6 @@
 package net.logicsquad.ibis;
 
-import java.util.Queue;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -21,8 +21,8 @@ class PossessiveCase implements Case {
 	}
 
 	@Override
-	public Word handle(Word word, String text, Queue<Word> queue) {
-		return new Word(word.text().substring(0, word.length() - 2), word.start());
+	public List<Word> handle(Word word, String text) {
+		return List.of(new Word(word.text().substring(0, word.length() - 2), word.start()));
 	}
 
 	@Override

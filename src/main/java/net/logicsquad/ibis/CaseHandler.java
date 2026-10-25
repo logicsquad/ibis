@@ -1,7 +1,6 @@
 package net.logicsquad.ibis;
 
 import java.util.List;
-import java.util.Queue;
 
 /**
  * {@link Handler} implementation that works by running a {@link Word} through a list of potential {@link Case}s that might modify it.
@@ -26,16 +25,13 @@ class CaseHandler implements Handler {
 	}
 
 	@Override
-	public Word handle(Word word, String text, Queue<Word> queue) {
+	public List<Word> handle(Word word, String text) {
 		for (Case c : cases) {
 			if (c.predicate().test(word)) {
-				if (c.recurseOnResult()) {
-					return handle(c.handle(word, text, queue), text, queue);
-				} else {
-					return c.handle(word, text, queue);
-				}
+				List<Word> result = c.handle(word, text);
+				return c.recurseOnResult() ? result.stream().flatMap(w -> handle(w, text).stream()).toList() : result;
 			}
 		}
-		return word;
+		return List.of(word);
 	}
 }

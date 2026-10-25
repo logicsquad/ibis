@@ -1,6 +1,6 @@
 package net.logicsquad.ibis;
 
-import java.util.Queue;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -28,11 +28,11 @@ class AbbreviationsCase implements Case {
 	}
 
 	@Override
-	public Word handle(Word word, String text, Queue<Word> queue) {
+	public List<Word> handle(Word word, String text) {
 		if (word.end() < text.length() && '.' == text.charAt(word.end())) {
-			return new Word(word.text() + ".", word.start());
+			return List.of(new Word(word.text() + ".", word.start()));
 		} else {
-			return word;
+			return List.of(word);
 		}
 	}
 
