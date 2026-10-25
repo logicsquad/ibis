@@ -78,7 +78,8 @@ public class DefaultTokenizer implements Tokenizer {
 	 * 
 	 * @param locale {@link Locale} for this tokenizer
 	 * @param text a string
-	 * @throws NullPointerException if {@code text} is {@code null}
+	 * @throws NullPointerException     if either argument is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	public DefaultTokenizer(Locale locale, String text) {
 		Objects.requireNonNull(text);

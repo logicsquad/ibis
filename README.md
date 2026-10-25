@@ -19,7 +19,7 @@ as a Maven dependency:
     <dependency>
       <groupId>net.logicsquad</groupId>
       <artifactId>ibis</artifactId>
-      <version>0.1</version>
+      <version>0.2</version>
     </dependency>
 
 Ibis ships with some built-in word lists, and you can start checking
@@ -46,9 +46,10 @@ pattern:
     Dictionary dict = builder.build();
     Checker checker = new Checker(dict);
 
-In this example, `words-1.txt` and `words-2.txt.gz` are resources
-available on the classpath at runtime. Word lists can be compressed
-with `gzip`.
+In this example, `addWords()` adds the built-in word lists, and
+`words-1.txt` and `words-2.txt.gz` are resources available on the
+classpath at runtime. Word lists must be encoded in UTF-8, and are
+decompressed with `gzip` if their names end in `.gz`.
 
 Internationalisation
 --------------------
