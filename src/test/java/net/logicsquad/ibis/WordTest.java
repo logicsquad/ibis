@@ -2,6 +2,8 @@ package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
@@ -73,6 +75,18 @@ public class WordTest {
 		Word w = Word.of("foo", 0);
 		// We know w.suggestions is null
 		assertDoesNotThrow(() -> w.suggestions());
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/12
+	@Test
+	public void suggestionsAreCopiedOnConstruction() {
+		List<String> suggestions = new ArrayList<>(List.of("one"));
+		Word word = Word.of("x", 0, suggestions);
+		Word copy = Word.of("x", 0).withSuggestions(suggestions);
+		suggestions.add("two");
+		assertEquals(List.of("one"), word.suggestions());
+		assertEquals(List.of("one"), copy.suggestions());
 		return;
 	}
 }

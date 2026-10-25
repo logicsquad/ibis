@@ -1,6 +1,5 @@
 package net.logicsquad.ibis;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -46,8 +45,8 @@ public class Word {
 	 * 
 	 * @param text        text content
 	 * @param start       start position in containing text
-	 * @param suggestions optional list of suggestions
-	 * @throws NullPointerException     if {@code text} is {@code null}
+	 * @param suggestions optional list of suggestions, which is copied
+	 * @throws NullPointerException     if {@code text} is {@code null}, or {@code suggestions} contains {@code null}
 	 * @throws IllegalArgumentException if {@code start} is negative
 	 */
 	private Word(String text, int start, List<String> suggestions) {
@@ -57,7 +56,7 @@ public class Word {
 		}
 		this.text = text;
 		this.start = start;
-		this.suggestions = suggestions;
+		this.suggestions = suggestions == null ? null : List.copyOf(suggestions);
 		return;
 	}
 
@@ -106,9 +105,9 @@ public class Word {
 	 * 
 	 * @param text        text content
 	 * @param start       start position in containing text
-	 * @param suggestions optional list of suggestions
+	 * @param suggestions optional list of suggestions, which is copied
 	 * @return new object
-	 * @throws NullPointerException     if {@code text} is {@code null}
+	 * @throws NullPointerException     if {@code text} is {@code null}, or {@code suggestions} contains {@code null}
 	 * @throws IllegalArgumentException if {@code start} is negative
 	 */
 	public static Word of(String text, int start, List<String> suggestions) {
@@ -173,14 +172,15 @@ public class Word {
 	 * @return list of suggestions
 	 */
 	public List<String> suggestions() {
-		return suggestions == null ? null : Collections.unmodifiableList(suggestions);
+		return suggestions;
 	}
 
 	/**
 	 * Returns a copy of this {@code Word} with suggestion list set to {@code suggestions}.
 	 * 
-	 * @param suggestions a list of suggestions for the new {@code Word}
+	 * @param suggestions a list of suggestions for the new {@code Word}, which is copied
 	 * @return new object
+	 * @throws NullPointerException if {@code suggestions} contains {@code null}
 	 */
 	public Word withSuggestions(List<String> suggestions) {
 		return new Word(text, start, suggestions);
