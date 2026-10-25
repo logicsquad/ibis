@@ -2,6 +2,8 @@ package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
 
 /**
@@ -46,6 +48,22 @@ public class WordTest {
 	@Test
 	public void toInitialCapReturnsEmptyStringForEmptyText() {
 		assertEquals("", Word.of("", 0).toInitialCap());
+		return;
+	}
+
+	// In Turkish, "I" lowercases to dotless "ı", and "i" uppercases to dotted "İ"
+	// https://github.com/logicsquad/ibis/issues/10
+	@Test
+	public void caseConversionIgnoresDefaultLocale() {
+		Locale defaultLocale = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			assertEquals("inside", Word.of("INSIDE", 0).toLowerCase());
+			assertEquals("Inside", Word.of("INSIDE", 0).toInitialCap());
+			assertEquals("Inside", Word.of("inside", 0).toInitialCap());
+		} finally {
+			Locale.setDefault(defaultLocale);
+		}
 		return;
 	}
 

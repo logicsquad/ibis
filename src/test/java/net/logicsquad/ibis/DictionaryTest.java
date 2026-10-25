@@ -69,4 +69,19 @@ public class DictionaryTest {
 		assertTrue(Dictionary.builder().addWords().build().isCorrect(Word.of("the", 0)));
 		return;
 	}
+
+	// https://github.com/logicsquad/ibis/issues/10
+	@Test
+	public void isCorrectIgnoresDefaultLocale() {
+		Dictionary d = Dictionary.builder().addWord("it").addWord("inside").build();
+		Locale defaultLocale = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			assertTrue(d.isCorrect(Word.of("It", 0)));
+			assertTrue(d.isCorrect(Word.of("INSIDE", 0)));
+		} finally {
+			Locale.setDefault(defaultLocale);
+		}
+		return;
+	}
 }
