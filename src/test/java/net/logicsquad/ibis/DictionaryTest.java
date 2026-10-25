@@ -41,4 +41,13 @@ public class DictionaryTest {
 		assertTrue(d.isCorrect(Word.of("AUSTRALIAN", 0)));
 		return;
 	}
+
+	// "why" has an empty Metaphone code, so an empty Word is looked up among its neighbours
+	// https://github.com/logicsquad/ibis/issues/8
+	@Test
+	public void isCorrectReturnsFalseForEmptyWord() {
+		Dictionary d = Dictionary.builder().addWord("why").build();
+		assertFalse(d.isCorrect(Word.of("", 0)));
+		return;
+	}
 }

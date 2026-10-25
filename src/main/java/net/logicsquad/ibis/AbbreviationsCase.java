@@ -29,7 +29,7 @@ class AbbreviationsCase implements Case {
 
 	@Override
 	public Word handle(Word word, String text, Queue<Word> queue) {
-		if ('.' == text.charAt(word.end())) {
+		if (word.end() < text.length() && '.' == text.charAt(word.end())) {
 			return Word.of(word.text() + ".", word.start());
 		} else {
 			return word;

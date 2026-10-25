@@ -66,7 +66,9 @@ class DashesCase implements Case {
 			}
 		}
 		if (parts.isEmpty()) {
-			LOG.error("Unable to handle {} in context:'{}'", word, text.substring(word.start() - 50, word.end() + 50));
+			int from = Math.clamp(word.start() - 50L, 0, text.length());
+			int to = Math.clamp(word.end() + 50L, from, text.length());
+			LOG.error("Unable to handle {} in context:'{}'", word, text.substring(from, to));
 			throw new IllegalArgumentException("No text found.");
 		} else if (parts.size() > 1) {
 			// skip(1) because we want to return the first element below

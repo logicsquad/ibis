@@ -43,6 +43,8 @@ public class HandlerTest {
 	private static final Word WORD_7 = Word.of("entity's", 0);
 	private static final Word EXPECTED_7 = Word.of("entity", 0);
 
+	private static final String TEXT_8 = "--";
+
 	@Test
 	public void handleReturnsExpectedWordForEg() {
 		Handler handler = Handler.newInstance(Locale.ENGLISH);
@@ -98,6 +100,14 @@ public class HandlerTest {
 		assertEquals(EXPECTED_6, result1);
 		Word result2 = handler.handle(WORD_7, TEXT_7, new LinkedList<>());
 		assertEquals(EXPECTED_7, result2);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/8
+	@Test
+	public void handleThrowsIllegalArgumentExceptionForDashesOnly() {
+		Handler handler = Handler.newInstance(Locale.ENGLISH);
+		assertThrows(IllegalArgumentException.class, () -> handler.handle(Word.of(TEXT_8, 0), TEXT_8, new LinkedList<>()));
 		return;
 	}
 }

@@ -195,11 +195,11 @@ public class Word {
 	}
 
 	/**
-	 * Returns {@link #text} with first character upper case, and remainder lower case.
-	 * 
+	 * Returns {@link #text} with first character upper case, and remainder lower case. If {@link #text} is empty, returns it unchanged.
+	 *
 	 * @return {@link #text} with initial cap
 	 */
 	String toInitialCap() {
-		return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
+		return text.isEmpty() ? text : text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
 	}
 }

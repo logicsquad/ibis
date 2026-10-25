@@ -92,6 +92,12 @@ public class DefaultTokenizerTest {
 	private static final String HYPHENATED_TRAILING_SINGLE_CHAR = "Type-A blood";
 	private static final List<Word> EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR = List.of(Word.of("Type", 0), Word.of("blood", 7));
 
+	// Special cases at the very end of the text, with no character after them
+	private static final String ABBREVIATION_AT_END_1 = "for example, e.g";
+	private static final List<Word> EXPECTED_ABBREVIATION_AT_END_1 = List.of(Word.of("for", 0), Word.of("example", 4), Word.of("e.g", 13));
+	private static final String ABBREVIATION_AT_END_2 = "that is, i.e";
+	private static final List<Word> EXPECTED_ABBREVIATION_AT_END_2 = List.of(Word.of("that", 0), Word.of("is", 5), Word.of("i.e", 9));
+
 	@Test
 	public void constructorThrowsOnNull() {
 		assertThrows(NullPointerException.class, () -> new DefaultTokenizer(Locale.ENGLISH, null));
@@ -244,6 +250,14 @@ public class DefaultTokenizerTest {
 	@Test
 	public void tokenizerDropsSingleCharPartOfHyphenatedWord() {
 		assertEquals(EXPECTED_HYPHENATED_TRAILING_SINGLE_CHAR, allWords(new DefaultTokenizer(Locale.ENGLISH, HYPHENATED_TRAILING_SINGLE_CHAR)));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/8
+	@Test
+	public void tokenizerHandlesAbbreviationAtEndOfText() {
+		assertEquals(EXPECTED_ABBREVIATION_AT_END_1, allWords(new DefaultTokenizer(Locale.ENGLISH, ABBREVIATION_AT_END_1)));
+		assertEquals(EXPECTED_ABBREVIATION_AT_END_2, allWords(new DefaultTokenizer(Locale.ENGLISH, ABBREVIATION_AT_END_2)));
 		return;
 	}
 }

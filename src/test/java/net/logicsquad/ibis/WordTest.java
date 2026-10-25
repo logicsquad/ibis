@@ -42,6 +42,13 @@ public class WordTest {
 		return;
 	}
 
+	// https://github.com/logicsquad/ibis/issues/8
+	@Test
+	public void toInitialCapReturnsEmptyStringForEmptyText() {
+		assertEquals("", Word.of("", 0).toInitialCap());
+		return;
+	}
+
 	// This is merely to cover a bug after introducing the call to Collections.unmodifiableList()
 	@Test
 	public void suggestionsReturnsNullIfSuggestionsIsNull() {
