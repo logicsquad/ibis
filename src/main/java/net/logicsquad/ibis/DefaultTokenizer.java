@@ -78,7 +78,8 @@ public class DefaultTokenizer implements Tokenizer {
 	 * 
 	 * @param locale {@link Locale} for this tokenizer
 	 * @param text a string
-	 * @throws NullPointerException if {@code text} is {@code null}
+	 * @throws NullPointerException     if either argument is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	public DefaultTokenizer(Locale locale, String text) {
 		Objects.requireNonNull(text);
@@ -149,23 +150,13 @@ public class DefaultTokenizer implements Tokenizer {
 	 * Sets {@link #next} to the next {@link Word}, or {@code null} if there are no more {@link Word}s
 	 */
 	private void primeNext() {
-		if (!queue.isEmpty()) {
-			next = handler.handle(queue.remove(), text, queue);
-			return;
-		}
-		Word candidate = candidateNext();
-		Word word = candidate == null ? null : handler.handle(candidate, text, queue);
-		// We need to call shouldReject() again below, because handler.handle() may have changed the Word
-		while (word != null && rejector.shouldReject(word)) {
-			if (queue.isEmpty()) {
-                do {
-                    candidate = candidateNext();
-                } while (candidate != null);
-				word = candidate == null ? null : handler.handle(candidate, text, queue);
-			} else {
-				word = queue.remove();
-			}
-		}
+		Word word;
+		do {
+			// Parts of a Word split by the Handler come before the next candidate
+			Word candidate = queue.isEmpty() ? candidateNext() : queue.remove();
+			word = candidate == null ? null : handler.handle(candidate, text, queue);
+			// We need to call shouldReject() again, because handler.handle() may have changed the Word
+		} while (word != null && rejector.shouldReject(word));
 		next = word;
 		return;
 	}

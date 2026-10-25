@@ -5,16 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
@@ -33,6 +34,10 @@ import org.slf4j.LoggerFactory;
  * <li>indicate whether a candidate word is spelled correctly; and</li>
  * <li>provide suggestions for incorrect words.</li>
  * </ul>
+ *
+ * <p>
+ * A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
+ * </p>
  * 
  * @author paulh
  * @since 0.1
@@ -151,12 +156,12 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a new {@code Builder}.
-	 * 
+	 * Returns a new {@code Builder} for {@code Locale.ENGLISH}.
+	 *
 	 * @return a new {@code Builder}
 	 */
 	public static Builder builder() {
-		return new Builder();
+		return builder(Locale.ENGLISH);
 	}
 
 	/**
@@ -164,6 +169,8 @@ public class Dictionary {
 	 *
 	 * @param locale a {@link Locale}
 	 * @return a new {@code Builder}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 * @since 0.2
 	 */
 	public static Builder builder(Locale locale) {
@@ -220,15 +227,6 @@ public class Dictionary {
 		private final StringEncoder codec;
 
 		/**
-		 * Constructor
-		 */
-		private Builder() {
-			locale = null;
-			codec = new Metaphone();
-			return;
-		}
-
-		/**
 		 * Constructor taking a {@link Locale}
 		 * 
 		 * @since 0.2
@@ -243,12 +241,12 @@ public class Dictionary {
 		}
 
 		/**
-		 * Adds words from all built-in word lists for {@link #locale}. If {@link #locale} is not set, or not known, this method is a no-op
-		 * 
+		 * Adds words from all built-in word lists for the language of {@link #locale}.
+		 *
 		 * @return this object
 		 */
 		public Builder addWords() {
-			if (locale == Locale.ENGLISH) {
+			if ("en".equals(locale.getLanguage())) {
 				addWords(WORDS_1);
 				addWords(WORDS_2);
 				addWords(NAMES_1);
@@ -259,56 +257,82 @@ public class Dictionary {
 		}
 
 		/**
-		 * Adds words from {@code resourceName} on classpath. The file can be compressed with GZip.
-		 * 
+		 * Adds words from {@code resourceName} on classpath. The resource must be encoded in UTF-8, and is decompressed with GZip if its name
+		 * ends with {@code .gz}.
+		 *
 		 * @param resourceName name of a resource on classpath
 		 * @return this object
-		 * @throws NullPointerException if {@code resourceName} is {@code null}
+		 * @throws NullPointerException     if {@code resourceName} is {@code null}
+		 * @throws IllegalArgumentException if the resource cannot be found or read
 		 */
 		public Builder addWords(String resourceName) {
 			Objects.requireNonNull(resourceName);
 			LOG.debug("Adding words from resource '{}'...", resourceName);
-			try (InputStream is = Dictionary.class.getResourceAsStream(resourceName);
-					Reader reader = isGzipped(resourceName) ? new InputStreamReader(new GZIPInputStream(is), StandardCharsets.UTF_8) : new InputStreamReader(is, StandardCharsets.UTF_8)) {
-				addWords(reader);
-			} catch (IOException e) {
-				LOG.error("Unable to add words from {}.", resourceName, e);
+			InputStream is = Dictionary.class.getResourceAsStream(resourceName);
+			if (is == null) {
+				LOG.error("Unable to find resource {}.", resourceName);
+				throw new IllegalArgumentException("Unable to find resource " + resourceName + ".");
 			}
-			return this;
+			return readWords(is, resourceName);
 		}
 
 		/**
-		 * Adds words from {@code reader}.
-		 * 
+		 * Adds words from {@code reader}, then closes it.
+		 *
 		 * @param reader a {@link Reader}
 		 * @return this object
-		 * @throws NullPointerException if {@code reader} is {@code null}
+		 * @throws NullPointerException     if {@code reader} is {@code null}
+		 * @throws IllegalArgumentException if {@code reader} cannot be read
 		 */
 		public Builder addWords(Reader reader) {
 			Objects.requireNonNull(reader);
 			try (BufferedReader bufferedReader = new BufferedReader(reader)) {
 				bufferedReader.lines().forEach(this::addWord);
-			} catch (IOException e) {
+			} catch (IOException | UncheckedIOException e) {
 				LOG.error("Unable to add words from Reader.", e);
+				throw new IllegalArgumentException("Unable to add words from Reader.", e);
 			}
 			return this;
 		}
 
 		/**
-		 * Adds words from file at {@code path}.
-		 * 
+		 * Adds words from file at {@code path}. The file must be encoded in UTF-8, and is decompressed with GZip if its name ends with
+		 * {@code .gz}.
+		 *
 		 * @param path a {@link Path}
 		 * @return this object
-		 * @throws NullPointerException if {@code path} is {@code null}
+		 * @throws NullPointerException     if {@code path} is {@code null}
+		 * @throws IllegalArgumentException if the file cannot be read
 		 */
 		public Builder addWords(Path path) {
 			Objects.requireNonNull(path);
 			LOG.debug("Adding words from path '{}'...", path);
-			try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
-				lines.forEach(this::addWord);
+			InputStream is;
+			try {
+				is = Files.newInputStream(path);
 			} catch (IOException e) {
-				LOG.error("Unable to load word list from {}.", path, e);
-				throw new IllegalArgumentException("Unable to load word list from Path.", e);
+				LOG.error("Unable to add words from {}.", path, e);
+				throw new IllegalArgumentException("Unable to add words from " + path + ".", e);
+			}
+			return readWords(is, path.toString());
+		}
+
+		/**
+		 * Adds words from {@code is}, then closes it. {@code is} must contain text encoded in UTF-8, and is decompressed with GZip if
+		 * {@code name} ends with {@code .gz}.
+		 *
+		 * @param is   an {@link InputStream}
+		 * @param name name of the word list {@code is} reads
+		 * @return this object
+		 * @throws IllegalArgumentException if {@code is} cannot be read, or does not contain valid UTF-8
+		 */
+		private Builder readWords(InputStream is, String name) {
+			try (InputStream in = is;
+					BufferedReader reader = new BufferedReader(new InputStreamReader(isGzipped(name) ? new GZIPInputStream(in) : in, StandardCharsets.UTF_8.newDecoder()))) {
+				reader.lines().forEach(this::addWord);
+			} catch (IOException | UncheckedIOException e) {
+				LOG.error("Unable to add words from {}.", name, e);
+				throw new IllegalArgumentException("Unable to add words from " + name + ".", e);
 			}
 			return this;
 		}
@@ -336,23 +360,26 @@ public class Dictionary {
 		}
 
 		/**
-		 * Does {@code resourceName} represent a file compressed with GZip?
-		 * 
-		 * @param resourceName resource name
+		 * Does {@code name} represent a file compressed with GZip?
+		 *
+		 * @param name name of a resource or file
 		 * @return {@code true} if it looks like the file is compressed with GZip, otherwise {@code false}
 		 */
-		private static boolean isGzipped(String resourceName) {
-			Objects.requireNonNull(resourceName);
-			return resourceName.endsWith(GZIP_EXTENSION);
+		private static boolean isGzipped(String name) {
+			Objects.requireNonNull(name);
+			return name.endsWith(GZIP_EXTENSION);
 		}
 
 		/**
-		 * Creates and returns a new {@code Dictionary} from this {@code Builder}.
+		 * Creates and returns a new {@code Dictionary} from this {@code Builder}. The new {@code Dictionary} holds a copy of the words added so
+		 * far, so adding words to this {@code Builder} afterwards does not change it.
 		 * 
 		 * @return new {@code Dictionary}
 		 */
 		public Dictionary build() {
-			return new Dictionary(codec, map);
+			Map<String, List<String>> copy = HashMap.newHashMap(map.size());
+			map.forEach((code, words) -> copy.put(code, List.copyOf(words)));
+			return new Dictionary(codec, Collections.unmodifiableMap(copy));
 		}
 	}
 

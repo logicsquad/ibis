@@ -35,7 +35,10 @@ public interface Handler {
 	/**
 	 * Returns a new {@link Handler} for {@link Locale} {@code locale}.
 	 *
+	 * @param locale a {@link Locale}
 	 * @return new object
+	 * @throws NullPointerException     if {@code locale} is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	static Handler newInstance(Locale locale) {
 		return switch (locale.getLanguage()) {

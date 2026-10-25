@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * A simple spelling checker. A {@code Checker} requires a {@link Dictionary} on construction, and a word {@link Tokenizer} over the text to
- * check when calling {@link #checkSpelling(Tokenizer)}.
+ * check when calling {@link #checkSpelling(Tokenizer)}. A {@code Checker} is immutable and thread-safe.
  * 
  * @author paulh
  * @since 0.1

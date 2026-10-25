@@ -10,7 +10,7 @@ import java.util.Locale;
  */
 public interface Tokenizer {
 	/**
-	 * Returns the raw text supplied to the constructor.
+	 * Returns the raw text supplied to this {@code Tokenizer}.
 	 * 
 	 * @return raw text
 	 */
@@ -40,9 +40,11 @@ public interface Tokenizer {
 	/**
 	 * Returns a {@code Tokenizer} for {@code text}.
 	 *
-	 * @param text a string
+	 * @param locale {@link Locale} of {@code text}
+	 * @param text   a string
 	 * @return {@link Tokenizer}
-	 * @throws NullPointerException if {@code text} is {@code null}
+	 * @throws NullPointerException     if either argument is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	static Tokenizer newInstance(Locale locale, String text) {
 		return new DefaultTokenizer(locale, text);
