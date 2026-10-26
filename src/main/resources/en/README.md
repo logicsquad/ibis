@@ -1,36 +1,54 @@
 Word Lists
 ==========
 
-This project includes various built-in word lists, included here under
-license or sourced from the public domain. Some or all of these lists
-may have been compressed by `gzip` and hence carry a `.gz` extension.
+These are Ibis's built-in English word lists, one word per line,
+encoded in UTF-8. Some are compressed with `gzip`, and carry a `.gz`
+extension. Each list's source and terms are below. The licence texts
+are in the `LICENSES` directory of the Ibis repository, and in
+`META-INF/LICENSES` in the Ibis jar.
 
 `words-1.txt`
 -------------
-Original source is the
-[3of6game](http://wordlist.aspell.net/12dicts-readme/#3of6) list from
-Alan Beale's [12dicts](http://wordlist.aspell.net/12dicts-readme/)
-word lists collection. The list has been processed for inclusion here
-by removing any annotations. This list is in the public domain.
+- **Source:** the
+  [3of6game](http://wordlist.aspell.net/12dicts-readme/#3of6) list
+  from Alan Beale's [12dicts](http://wordlist.aspell.net/12dicts/)
+  collection. 3of6game first appeared in 12dicts 6.0, and is unchanged
+  through 6.0.2 (June 2016), the latest release.
+- **Changes:** the list's annotation characters (`^`, `&`, `$`, `+`
+  and `!`) have been removed.
+- **Terms:** public domain. Alan Beale releases the 12dicts lists to
+  the public domain, and requests acknowledgement of their use, which
+  this section gives (`LicenseRef-12dicts`).
 
 `words-2.txt`
 -------------
-This list contains common words not present in `words-1.txt`, compiled
-by Logic Squad. This list is in the public domain.
+- **Source:** common words not in `words-1.txt`, compiled by Logic
+  Squad.
+- **Terms:** dedicated to the public domain under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (`CC0-1.0`).
 
 `names-1.txt`
 -------------
-This list contains proper names, and is a copy of the file
-`/share/dict/propernames` from FreeBSD, used here under the [FreeBSD
-License](https://www.freebsd.org/copyright/freebsd-license/).
+- **Source:** the proper names list `propernames` from 4.4BSD-Lite, as
+  distributed by FreeBSD in `/usr/share/dict/propernames`.
+- **Terms:** Copyright The Regents of the University of California,
+  distributed under the BSD 3-Clause License (`BSD-3-Clause`). The
+  file carries no notice of its own, so the terms are those of the
+  4.4BSD-Lite distribution it came from.
 
 `names-2.txt`
 -------------
-This list contains proper names not present in `names-1.txt`, compiled
-by Logic Squad. This list is in the public domain.
+- **Source:** proper names not in `names-1.txt`, compiled by Logic
+  Squad.
+- **Terms:** dedicated to the public domain under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (`CC0-1.0`).
 
 `acronyms.txt`
 --------------
-This list contains common acronyms not present in `words-1.txt` or
-`words-2.txt`, compiled by Logic Squad. This list is in the public
-domain.
+- **Source:** common acronyms not in `words-1.txt` or `words-2.txt`,
+  compiled by Logic Squad.
+- **Terms:** dedicated to the public domain under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (`CC0-1.0`).

@@ -19,7 +19,7 @@ as a Maven dependency:
     <dependency>
       <groupId>net.logicsquad</groupId>
       <artifactId>ibis</artifactId>
-      <version>0.4</version>
+      <version>0.5</version>
     </dependency>
 
 Ibis ships with some built-in word lists, and you can start checking
@@ -32,10 +32,11 @@ text against a `Dictionary` containing these words:
     }
 
 A `Misspelling` contains the incorrect `Word`, which holds its text and
-start position in the original text, and a list of suggestions (based
-on phonetic matches with words in the dictionary), which may be empty:
+start position in the original text, and up to 10 suggestions, which
+may be empty. Suggestions are words in the dictionary that are one
+edit away from the misspelling, or that sound like it, closest first:
 
-    Misspelling[word=Word[text=forr, start=16], suggestions=[fair, fairy, far...
+    Misspelling[word=Word[text=forr, start=16], suggestions=[for, fora, fore...
     Misspelling[word=Word[text=aod, start=49], suggestions=[ad, add, ado, aid...
 
 A `Checker` is immutable and thread-safe, so you can create one and use
@@ -81,6 +82,9 @@ Contributing
 By all means, open issue tickets and pull requests if you have
 something to contribute.
 
+[docs/design.md](docs/design.md) describes how Ibis works: how it
+finds words, stores and checks them, and suggests corrections.
+
 Influences
 ----------
 The landscape of open source spell checkers for Java is a little
@@ -96,9 +100,20 @@ While Ibis was, to some extent, _inspired by_ the
 of it](https://github.com/magsilva/jazzy)), it is a [clean-room
 design](https://en.wikipedia.org/wiki/Clean-room_design) and licensed
 here under the more permissive [2-Clause BSD
-License](https://opensource.org/license/bsd-2-clause).  This extends
-to the word lists shipped with this project, all of which are used
-here either under the [FreeBSD
-License](https://www.freebsd.org/copyright/freebsd-license/) or
-because they have been explicitly declared as in the [public
-domain](https://en.wikipedia.org/wiki/Public_domain).
+License](https://opensource.org/license/bsd-2-clause).
+
+Licensing
+---------
+Ibis is licensed under the [2-Clause BSD
+License](https://opensource.org/license/bsd-2-clause) (see
+[LICENSE](LICENSE)). The built-in word lists have their own terms,
+which are all permissive: the BSD 3-Clause License, a public domain
+release, or a public domain dedication under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+[src/main/resources/en/README.md](src/main/resources/en/README.md)
+gives each list's source and terms.
+
+The project follows the [REUSE](https://reuse.software/)
+specification: [REUSE.toml](REUSE.toml) records the copyright and
+licence of every file, and [LICENSES](LICENSES) holds each licence's
+text. The jar carries the same texts under `META-INF/LICENSES`.

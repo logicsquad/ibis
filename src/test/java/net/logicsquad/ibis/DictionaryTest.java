@@ -335,12 +335,12 @@ public class DictionaryTest {
 		return;
 	}
 
-	// "alfa" has the same Metaphone code as "alpha", so both are suggestions for "allfa"
+	// "alfa" has the same Metaphone code as "alpha", so both are suggestions for "allfa", and "alfa" is closer
 	// https://github.com/logicsquad/ibis/issues/21
 	@Test
 	public void withMergesSuggestions() {
 		Dictionary d = dictionary.with(List.of("alfa", "alpha"));
-		assertEquals(List.of("alpha", "alfa"), d.suggestionsFor("allfa"));
+		assertEquals(List.of("alfa", "alpha"), d.suggestionsFor("allfa"));
 		return;
 	}
 
@@ -352,6 +352,105 @@ public class DictionaryTest {
 		assertTrue(d.isCorrect("zyzzyva"));
 		assertEquals(Locale.UK, d.locale());
 		assertFalse(Dictionary.builtIn(Locale.UK).isCorrect("zyzzyva"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForPutsIntendedWordFirst() {
+		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
+		assertEquals("for", d.suggestionsFor("forr").get(0));
+		assertEquals("definitely", d.suggestionsFor("definately").get(0));
+		assertEquals("weird", d.suggestionsFor("wierd").get(0));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForOrdersByDistanceThenAlphabetically() {
+		Dictionary d = Dictionary.builder().addWords(List.of("Fora", "fore", "fair", "for", "far")).build();
+		assertEquals(List.of("for", "Fora", "fore", "fair", "far"), d.suggestionsFor("forr"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForIgnoresCase() {
+		Dictionary d = Dictionary.builder().addWord("NATO").build();
+		assertEquals(List.of("NATO"), d.suggestionsFor("nato"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForReturnsAtMostTen() {
+		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
+		assertTrue(d.suggestionsFor("forr", 100).size() > 10);
+		assertEquals(d.suggestionsFor("forr", 100).subList(0, 10), d.suggestionsFor("forr"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForRespectsLimit() {
+		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
+		assertEquals(List.of("for", "fora"), d.suggestionsFor("forr", 2));
+		assertEquals(List.of(), d.suggestionsFor("forr", 0));
+		assertEquals(List.of(), d.suggestionsFor("for", 2));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/22
+	@Test
+	public void suggestionsForThrowsForNegativeLimit() {
+		assertThrows(IllegalArgumentException.class, () -> dictionary.suggestionsFor("allfa", -1));
+		return;
+	}
+
+	// "the" doesn't sound like "teh", and "government" doesn't sound like "goverment", but each is one edit away
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForIncludesWordsOneEditAway() {
+		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
+		assertTrue(d.suggestionsFor("teh").contains("the"));
+		assertEquals("government", d.suggestionsFor("goverment").get(0));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForFindsEachKindOfEdit() {
+		Dictionary d = Dictionary.builder().addWords(List.of("the", "government", "pasta", "attic")).build();
+		assertEquals(List.of("the"), d.suggestionsFor("teh"));
+		assertEquals(List.of("government"), d.suggestionsFor("goverment"));
+		assertEquals(List.of("pasta"), d.suggestionsFor("pastxa"));
+		assertEquals(List.of("attic"), d.suggestionsFor("attiq"));
+		return;
+	}
+
+	// "ten" is one edit from "teh", but "tea" also sounds like it
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForPrefersWordsThatSoundAlikeAtSameDistance() {
+		Dictionary d = Dictionary.builder().addWords(List.of("ten", "tea")).build();
+		assertEquals(List.of("tea", "ten"), d.suggestionsFor("teh"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForGivesWordsDifferingInCaseOnce() {
+		assertEquals(List.of("ward"), Dictionary.builder().addWords(List.of("Ward", "ward")).build().suggestionsFor("wardd"));
+		assertEquals(List.of("ward"), Dictionary.builder().addWords(List.of("ward", "Ward")).build().suggestionsFor("wardd"));
+		assertEquals(List.of("Ward"), Dictionary.builder().addWord("Ward").build().suggestionsFor("wardd"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForUsesWordsInBase() {
+		Dictionary d = Dictionary.builder().addWord("the").build().with(List.of("tea"));
+		assertEquals(List.of("tea", "the"), d.suggestionsFor("teh"));
 		return;
 	}
 }

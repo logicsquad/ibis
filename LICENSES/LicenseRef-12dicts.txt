@@ -1,0 +1,7 @@
+The 12dicts word lists, compiled by Alan Beale, are released to the
+public domain. The README of 12dicts release 6.0.2 (June 2016) says:
+
+    I explicitly release them to the public domain, but request
+    acknowledgment of their use.
+
+Source: http://wordlist.aspell.net/12dicts-readme/

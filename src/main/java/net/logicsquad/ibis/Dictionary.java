@@ -14,18 +14,22 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
-import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +68,14 @@ public class Dictionary {
 	private final StringEncoder codec;
 
 	/**
-	 * Maximum <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> between an incorrect word and suggestions
-	 * returned
+	 * Maximum edit distance between an incorrect word and suggestions that sound like it
 	 */
-	private static final int MAX_DISTANCE = 4;
+	private static final int MAX_DISTANCE = 3;
+
+	/**
+	 * Maximum number of suggestions returned by {@link #suggestionsFor(String)}
+	 */
+	static final int MAX_SUGGESTIONS = 10;
 
 	/**
 	 * Map for words keyed on phonetic representation
@@ -78,6 +86,12 @@ public class Dictionary {
 	 * Optional {@code Dictionary} whose words this one shares rather than copies
 	 */
 	private final Dictionary base;
+
+	/**
+	 * Characters appearing in lower case words in this {@code Dictionary}, including those in {@link #base}, for generating edits of
+	 * incorrect words
+	 */
+	private final char[] alphabet;
 
 	/**
 	 * Built-in {@code Dictionary}s, built on first use
@@ -97,6 +111,18 @@ public class Dictionary {
 		this.codec = codec;
 		this.map = map;
 		this.base = base;
+		Set<Character> characters = new TreeSet<>();
+		if (base != null) {
+			for (char c : base.alphabet) {
+				characters.add(c);
+			}
+		}
+		map.values().forEach(words -> words.forEach(w -> toLowerCase(w, locale).chars().forEach(c -> characters.add((char) c))));
+		alphabet = new char[characters.size()];
+		int i = 0;
+		for (char c : characters) {
+			alphabet[i++] = c;
+		}
 		return;
 	}
 
@@ -151,25 +177,131 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}, or an empty list if {@code word} is spelled correctly.
+	 * Returns up to 10 suggestions for {@code word}, best first, or an empty list if {@code word} is spelled correctly. See
+	 * {@link #suggestionsFor(String, int)}.
 	 * 
 	 * @param word a word
 	 * @return a list of suggestions
 	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
 	public List<String> suggestionsFor(String word) {
-		Objects.requireNonNull(word);
-		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word);
+		return suggestionsFor(word, MAX_SUGGESTIONS);
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}, which the caller already knows to be spelled incorrectly.
+	 * <p>
+	 * Returns up to {@code limit} suggestions for {@code word}, best first, or an empty list if {@code word} is spelled correctly.
+	 * </p>
 	 * 
-	 * @param word an incorrect word
+	 * <p>
+	 * Suggestions are the words in this {@code Dictionary} that are within an edit distance of 1 of {@code word}, or that sound like it
+	 * (they have the same phonetic code) and are within an edit distance of 3. The edit distance counts an insertion, deletion, substitution
+	 * or transposition of adjacent characters as one edit, and ignores case. Suggestions are ordered by edit distance, then those that sound
+	 * like {@code word} first, then alphabetically. Words differing only in case are suggested once, in lower case if this
+	 * {@code Dictionary} contains that form.
+	 * </p>
+	 * 
+	 * @param word  a word
+	 * @param limit maximum number of suggestions
+	 * @return a list of suggestions
+	 * @throws NullPointerException     if {@code word} is {@code null}
+	 * @throws IllegalArgumentException if {@code limit} is negative
+	 * @since 0.5
+	 */
+	public List<String> suggestionsFor(String word, int limit) {
+		Objects.requireNonNull(word);
+		if (limit < 0) {
+			throw new IllegalArgumentException("limit must not be negative.");
+		}
+		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word, limit);
+	}
+
+	/**
+	 * Returns up to {@code limit} suggestions for {@code word}, which the caller already knows to be spelled incorrectly, as
+	 * {@link #suggestionsFor(String, int)} does.
+	 * 
+	 * @param word  an incorrect word
+	 * @param limit maximum number of suggestions
 	 * @return a list of suggestions
 	 */
-	List<String> suggestionsForIncorrect(String word) {
-		return wordsFor(codeForString(codec, word)).stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+	List<String> suggestionsForIncorrect(String word, int limit) {
+		String lowerCaseWord = toLowerCase(word, locale);
+		// Keyed on lower case, so that words differing only in case are suggested once
+		Map<String, Suggestion> suggestions = new LinkedHashMap<>();
+		for (String s : wordsFor(codeForString(codec, word))) {
+			String lowerCase = toLowerCase(s, locale);
+			int distance = Distance.between(lowerCaseWord, lowerCase);
+			if (distance <= MAX_DISTANCE) {
+				suggestions.merge(lowerCase, new Suggestion(s, lowerCase, distance, true), Suggestion::preferLowerCase);
+			}
+		}
+		for (String edit : editsOf(lowerCaseWord)) {
+			for (String s : wordsFor(codeForString(codec, edit))) {
+				String lowerCase = toLowerCase(s, locale);
+				if (lowerCase.equals(edit)) {
+					suggestions.merge(lowerCase, new Suggestion(s, lowerCase, 1, false), Suggestion::preferLowerCase);
+				}
+			}
+		}
+		return suggestions.values().stream().sorted(Suggestion.ORDER).limit(limit).map(Suggestion::word).toList();
+	}
+
+	/**
+	 * Returns every string one edit from {@code word}: each deletion, transposition of adjacent characters, substitution and insertion of a
+	 * character, using the characters in {@link #alphabet}.
+	 * 
+	 * @param word a word
+	 * @return strings one edit from {@code word}
+	 */
+	private Set<String> editsOf(String word) {
+		Set<String> edits = new LinkedHashSet<>();
+		int length = word.length();
+		for (int i = 0; i < length; i++) {
+			edits.add(word.substring(0, i) + word.substring(i + 1));
+		}
+		for (int i = 0; i < length - 1; i++) {
+			edits.add(word.substring(0, i) + word.charAt(i + 1) + word.charAt(i) + word.substring(i + 2));
+		}
+		for (int i = 0; i <= length; i++) {
+			for (char c : alphabet) {
+				if (i < length) {
+					edits.add(word.substring(0, i) + c + word.substring(i + 1));
+				}
+				edits.add(word.substring(0, i) + c + word.substring(i));
+			}
+		}
+		edits.remove(word);
+		edits.remove("");
+		return edits;
+	}
+
+	/**
+	 * A candidate suggestion, with what's needed to rank it.
+	 * 
+	 * @param word          a word from this {@code Dictionary}
+	 * @param lowerCaseWord {@code word} in lower case
+	 * @param distance      edit distance from the incorrect word, ignoring case
+	 * @param soundsLike    whether {@code word} has the same phonetic code as the incorrect word
+	 */
+	private record Suggestion(String word, String lowerCaseWord, int distance, boolean soundsLike) {
+		/**
+		 * Best first: by edit distance, then those that sound like the incorrect word, then alphabetically ignoring case
+		 */
+		private static final Comparator<Suggestion> ORDER = Comparator.comparingInt(Suggestion::distance)
+				.thenComparing(Suggestion::soundsLike, Comparator.reverseOrder())
+				.thenComparing(Suggestion::lowerCaseWord);
+
+		/**
+		 * Returns this {@code Suggestion} or {@code other}, which differ only in the case of their words, preferring the one whose word is
+		 * lower case: {@link #isCorrect(String)} accepts a lower case word with an initial capital too, but not the reverse.
+		 * 
+		 * @param other a {@code Suggestion} whose word differs from this one's only in case
+		 * @return {@code Suggestion} to keep
+		 */
+		private Suggestion preferLowerCase(Suggestion other) {
+			Suggestion kept = other.word.equals(other.lowerCaseWord) && !word.equals(lowerCaseWord) ? other : this;
+			return new Suggestion(kept.word, lowerCaseWord, Math.min(distance, other.distance), soundsLike || other.soundsLike);
+		}
 	}
 
 	/**

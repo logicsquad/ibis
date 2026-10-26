@@ -105,3 +105,38 @@ Initial public release.
   and the tokenizer depending on the JVM's default locale.
   [#15](https://github.com/logicsquad/ibis/issues/15),
   [#17](https://github.com/logicsquad/ibis/issues/17)
+
+## [0.5] - 2026-10-26
+### Added
+- Added `Dictionary.suggestionsFor(String, int)`, which returns up to
+  a given number of suggestions.
+  [#22](https://github.com/logicsquad/ibis/issues/22)
+- Added a design document, `docs/design.md`, and an overview in the
+  package Javadoc. [#24](https://github.com/logicsquad/ibis/issues/24)
+- Added copyright and licence information for every file, following
+  the REUSE specification, and the licence texts to the jar and POM.
+  [#25](https://github.com/logicsquad/ibis/issues/25)
+
+### Changed
+- Suggestions are now ordered best first, by edit distance, and
+  `suggestionsFor(String)` and `Checker` return at most 10.
+  [#22](https://github.com/logicsquad/ibis/issues/22)
+- The edit distance now counts a transposition of adjacent characters
+  as one edit, and ignores case.
+  [#22](https://github.com/logicsquad/ibis/issues/22)
+- Suggestions now include words one edit away from the misspelling,
+  not only words that sound like it, and words differing only in case
+  are suggested once.
+  [#23](https://github.com/logicsquad/ibis/issues/23)
+- Logic Squad's built-in word lists are now dedicated to the public
+  domain under CC0 1.0.
+  [#25](https://github.com/logicsquad/ibis/issues/25)
+
+### Removed
+- Removed the dependency on Apache Commons Text.
+  [#22](https://github.com/logicsquad/ibis/issues/22)
+
+### Fixed
+- Fixed the documented source and licence of the built-in proper
+  names list, which comes from 4.4BSD-Lite under the BSD 3-Clause
+  License. [#25](https://github.com/logicsquad/ibis/issues/25)

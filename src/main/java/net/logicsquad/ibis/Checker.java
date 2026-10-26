@@ -59,7 +59,8 @@ public class Checker {
 	}
 
 	/**
-	 * Checks spelling of {@code text}, returning a {@link List} of {@link Misspelling}s.
+	 * Checks spelling of {@code text}, returning a {@link List} of {@link Misspelling}s. Each has up to 10 suggestions, best first, as
+	 * {@link Dictionary#suggestionsFor(String)} returns them.
 	 *
 	 * @param text text to check
 	 * @return list of {@link Misspelling}s
@@ -70,7 +71,7 @@ public class Checker {
 		Objects.requireNonNull(text);
 		return tokenizer.tokenize(text)
 				.filter(w -> !dictionary.isCorrect(w.text()))
-				.map(w -> new Misspelling(w, dictionary.suggestionsForIncorrect(w.text())))
+				.map(w -> new Misspelling(w, dictionary.suggestionsForIncorrect(w.text(), Dictionary.MAX_SUGGESTIONS)))
 				.toList();
 	}
 }
