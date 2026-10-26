@@ -48,3 +48,60 @@ Initial public release.
   [#12](https://github.com/logicsquad/ibis/issues/12)
 - Fixed errors in the documentation and POM metadata.
   [#14](https://github.com/logicsquad/ibis/issues/14)
+
+## [0.4] - 2026-10-26
+### Added
+- Added `Dictionary.builtIn(Locale)`, which builds each language's
+  built-in dictionary once and shares it, and `Dictionary.with()`,
+  which adds words to a dictionary without copying it. A second
+  `new Checker()` now takes under a millisecond rather than 25 ms.
+  [#21](https://github.com/logicsquad/ibis/issues/21)
+- Added `Dictionary.locale()`, so a caller chooses the locale once,
+  when building the dictionary.
+  [#15](https://github.com/logicsquad/ibis/issues/15)
+- Added a `Checker(Dictionary, Tokenizer)` constructor for a caller's
+  own tokenizer. [#17](https://github.com/logicsquad/ibis/issues/17)
+- Added `addWords(Class, String)`, `addWords(InputStream)` and
+  `addWords(Collection)` to `Dictionary.Builder`.
+  [#20](https://github.com/logicsquad/ibis/issues/20)
+
+### Changed
+- `Checker.checkSpelling(String)` now returns a list of `Misspelling`s,
+  whose suggestions are never null, and `Word` is a record of a word's
+  text and position. [#16](https://github.com/logicsquad/ibis/issues/16)
+- `Dictionary.isCorrect()` and `suggestionsFor()` now take a `String`,
+  and `suggestionsFor()` returns an empty list for a correctly spelled
+  word rather than throwing.
+  [#19](https://github.com/logicsquad/ibis/issues/19)
+- `Tokenizer` is now a reusable, thread-safe strategy whose
+  `tokenize(String)` returns a `Stream<Word>`, created by
+  `Tokenizer.forLocale()`.
+  [#17](https://github.com/logicsquad/ibis/issues/17)
+- `Checker(Dictionary)` now chooses its tokenizer from the
+  dictionary's locale, which case conversion also uses.
+  [#15](https://github.com/logicsquad/ibis/issues/15)
+- `Dictionary.Builder.addWords()` is renamed `addBuiltInWords()`, and
+  layers the builder's words over the shared built-in dictionary.
+  [#20](https://github.com/logicsquad/ibis/issues/20),
+  [#21](https://github.com/logicsquad/ibis/issues/21)
+- Word lists are now recognised as gzipped by their content rather
+  than a `.gz` name, streams and readers a caller opened are left open,
+  and every loading failure throws `UncheckedIOException`.
+  [#20](https://github.com/logicsquad/ibis/issues/20)
+
+### Removed
+- Removed `Checker.checkSpelling(Tokenizer)`,
+  `Tokenizer.newInstance()`, `Word.of()` and `Word.suggestions()`.
+  [#16](https://github.com/logicsquad/ibis/issues/16),
+  [#17](https://github.com/logicsquad/ibis/issues/17)
+- Removed `Dictionary.Builder.addWords(String)` in favour of
+  `addWords(Class, String)`, which can see a caller's own resources.
+  [#20](https://github.com/logicsquad/ibis/issues/20)
+- `Handler`, `Rejector` and `DefaultTokenizer` are no longer public.
+  [#18](https://github.com/logicsquad/ibis/issues/18)
+
+### Fixed
+- Fixed `Checker.checkSpelling(String)` always tokenizing as English,
+  and the tokenizer depending on the JVM's default locale.
+  [#15](https://github.com/logicsquad/ibis/issues/15),
+  [#17](https://github.com/logicsquad/ibis/issues/17)
