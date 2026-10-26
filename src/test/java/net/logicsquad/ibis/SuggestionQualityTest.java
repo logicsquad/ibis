@@ -27,8 +27,8 @@ public class SuggestionQualityTest {
 
 	// Minimum percentages of misspellings whose intended word is suggested first, in the top 3, and in the top 10. Raise these when
 	// suggestions improve.
-	private static final int MIN_FIRST = 78;
-	private static final int MIN_TOP_3 = 93;
+	private static final int MIN_FIRST = 94;
+	private static final int MIN_TOP_3 = 97;
 	private static final int MIN_TOP_10 = 97;
 
 	// https://github.com/logicsquad/ibis/issues/27

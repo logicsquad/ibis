@@ -362,14 +362,34 @@ public class DictionaryTest {
 		assertEquals("for", d.suggestionsFor("forr").get(0));
 		assertEquals("definitely", d.suggestionsFor("definately").get(0));
 		assertEquals("weird", d.suggestionsFor("wierd").get(0));
+		assertEquals("the", d.suggestionsFor("teh").get(0));
+		assertEquals("and", d.suggestionsFor("adn").get(0));
 		return;
 	}
 
+	// None of these is in the frequency list, so they are equally common
 	// https://github.com/logicsquad/ibis/issues/22
 	@Test
 	public void suggestionsForOrdersByDistanceThenAlphabetically() {
-		Dictionary d = Dictionary.builder().addWords(List.of("Fora", "fore", "fair", "for", "far")).build();
-		assertEquals(List.of("for", "Fora", "fore", "fair", "far"), d.suggestionsFor("forr"));
+		Dictionary d = Dictionary.builder().addWords(List.of("Zora", "zore", "zair", "zor", "zar")).build();
+		assertEquals(List.of("zor", "Zora", "zore", "zair", "zar"), d.suggestionsFor("zorr"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/27
+	@Test
+	public void suggestionsForPrefersCommonWordsAtSameDistance() {
+		Dictionary d = Dictionary.builder().addWords(List.of("fora", "fore")).build();
+		assertEquals(List.of("fore", "fora"), d.suggestionsFor("forr"));
+		return;
+	}
+
+	// "tha" is one edit from "thaa", and "the" two, but "the" is far more common
+	// https://github.com/logicsquad/ibis/issues/27
+	@Test
+	public void suggestionsForCanPreferMuchMoreCommonWordsFurtherAway() {
+		Dictionary d = Dictionary.builder().addWords(List.of("the", "tha")).build();
+		assertEquals(List.of("the", "tha"), d.suggestionsFor("thaa"));
 		return;
 	}
 
@@ -394,7 +414,7 @@ public class DictionaryTest {
 	@Test
 	public void suggestionsForRespectsLimit() {
 		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
-		assertEquals(List.of("for", "fora"), d.suggestionsFor("forr", 2));
+		assertEquals(List.of("for", "four"), d.suggestionsFor("forr", 2));
 		assertEquals(List.of(), d.suggestionsFor("forr", 0));
 		assertEquals(List.of(), d.suggestionsFor("for", 2));
 		return;
@@ -428,7 +448,7 @@ public class DictionaryTest {
 		return;
 	}
 
-	// "ten" is one edit from "teh", but "tea" also sounds like it
+	// "ten" is one edit from "teh", and more common, but "tea" also sounds like it
 	// https://github.com/logicsquad/ibis/issues/23
 	@Test
 	public void suggestionsForPrefersWordsThatSoundAlikeAtSameDistance() {
@@ -450,7 +470,7 @@ public class DictionaryTest {
 	@Test
 	public void suggestionsForUsesWordsInBase() {
 		Dictionary d = Dictionary.builder().addWord("the").build().with(List.of("tea"));
-		assertEquals(List.of("tea", "the"), d.suggestionsFor("teh"));
+		assertEquals(List.of("the", "tea"), d.suggestionsFor("teh"));
 		return;
 	}
 }

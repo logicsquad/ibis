@@ -9,8 +9,8 @@ import org.apache.commons.codec.StringEncoder;
 import org.apache.commons.codec.language.Metaphone;
 
 /**
- * A language that Ibis supports. Everything language-specific (phonetic encoder, built-in word lists and tokenizer special cases) is selected
- * here, by {@link Locale#getLanguage()}.
+ * A language that Ibis supports. Everything language-specific (phonetic encoder, built-in word lists, word frequencies and tokenizer
+ * special cases) is selected here, by {@link Locale#getLanguage()}.
  *
  * @author paulh
  * @since 0.4
@@ -20,7 +20,7 @@ enum Language {
 	 * English
 	 */
 	ENGLISH(Locale.ENGLISH, Metaphone::new, List.of("/en/words-1.txt.gz", "/en/words-2.txt", "/en/names-1.txt.gz", "/en/names-2.txt", "/en/acronyms.txt"),
-			() -> List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
+			"/en/frequency.txt.gz", () -> List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
 
 	/**
 	 * {@link Locale} for this language alone
@@ -38,6 +38,11 @@ enum Language {
 	private final List<String> builtInWordLists;
 
 	/**
+	 * Name of the resource listing words in lower case, most common first
+	 */
+	private final String frequencyList;
+
+	/**
 	 * Supplier of {@link Case}s for a {@link Handler}
 	 */
 	private final Supplier<List<Case>> cases;
@@ -48,12 +53,14 @@ enum Language {
 	 * @param locale           {@link Locale} for this language alone
 	 * @param encoder          supplier of {@link StringEncoder}s
 	 * @param builtInWordLists names of built-in word list resources
+	 * @param frequencyList    name of the resource listing words in lower case, most common first
 	 * @param cases            supplier of {@link Case}s
 	 */
-	Language(Locale locale, Supplier<StringEncoder> encoder, List<String> builtInWordLists, Supplier<List<Case>> cases) {
+	Language(Locale locale, Supplier<StringEncoder> encoder, List<String> builtInWordLists, String frequencyList, Supplier<List<Case>> cases) {
 		this.locale = locale;
 		this.encoder = encoder;
 		this.builtInWordLists = builtInWordLists;
+		this.frequencyList = frequencyList;
 		this.cases = cases;
 		return;
 	}
@@ -101,6 +108,15 @@ enum Language {
 	 */
 	List<String> builtInWordLists() {
 		return builtInWordLists;
+	}
+
+	/**
+	 * Returns the name of the resource listing words in lower case, most common first, one per line, compressed with GZip.
+	 *
+	 * @return name of frequency list resource
+	 */
+	String frequencyList() {
+		return frequencyList;
 	}
 
 	/**

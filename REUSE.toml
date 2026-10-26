@@ -18,6 +18,7 @@ path = [
     "src/main/resources/en/words-2.txt",
     "src/main/resources/en/names-2.txt",
     "src/main/resources/en/acronyms.txt",
+    "src/main/resources/en/frequency.txt.gz",
     "src/test/resources/misspellings.txt",
 ]
 precedence = "override"

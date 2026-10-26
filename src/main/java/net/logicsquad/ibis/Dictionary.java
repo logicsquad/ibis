@@ -78,6 +78,17 @@ public class Dictionary {
 	static final int MAX_SUGGESTIONS = 10;
 
 	/**
+	 * Weight of the natural logarithm of a suggestion's rank in its score, so that one more edit costs as much as being about 800 times less
+	 * common
+	 */
+	private static final double RANK_WEIGHT = 0.15;
+
+	/**
+	 * Amount taken off the score of a suggestion that sounds like the incorrect word
+	 */
+	private static final double SOUNDS_LIKE_BONUS = 0.4;
+
+	/**
 	 * Map for words keyed on phonetic representation
 	 */
 	private final Map<String, List<String>> map;
@@ -94,9 +105,19 @@ public class Dictionary {
 	private final char[] alphabet;
 
 	/**
+	 * Ranks of words in lower case, from 1 for the most common, for ranking suggestions
+	 */
+	private final Map<String, Integer> ranks;
+
+	/**
 	 * Built-in {@code Dictionary}s, built on first use
 	 */
 	private static final Map<Language, Dictionary> BUILT_IN = new ConcurrentHashMap<>();
+
+	/**
+	 * Ranks of words in each {@link Language}, loaded on first use
+	 */
+	private static final Map<Language, Map<String, Integer>> RANKS = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructor
@@ -111,6 +132,7 @@ public class Dictionary {
 		this.codec = codec;
 		this.map = map;
 		this.base = base;
+		ranks = RANKS.computeIfAbsent(Language.of(locale), Dictionary::loadRanks);
 		Set<Character> characters = new TreeSet<>();
 		if (base != null) {
 			for (char c : base.alphabet) {
@@ -196,9 +218,10 @@ public class Dictionary {
 	 * <p>
 	 * Suggestions are the words in this {@code Dictionary} that are within an edit distance of 1 of {@code word}, or that sound like it
 	 * (they have the same phonetic code) and are within an edit distance of 3. The edit distance counts an insertion, deletion, substitution
-	 * or transposition of adjacent characters as one edit, and ignores case. Suggestions are ordered by edit distance, then those that sound
-	 * like {@code word} first, then alphabetically. Words differing only in case are suggested once, in lower case if this
-	 * {@code Dictionary} contains that form.
+	 * or transposition of adjacent characters as one edit, and ignores case. Suggestions are ordered by a score: the edit distance, plus a
+	 * little for how rare the suggestion is in this {@code Dictionary}'s language, less a little if it sounds like {@code word}. So closer
+	 * words usually come first, but a much more common word can come before a closer, rarer one. Words with the same score are ordered
+	 * alphabetically. Words differing only in case are suggested once, in lower case if this {@code Dictionary} contains that form.
 	 * </p>
 	 * 
 	 * @param word  a word
@@ -232,18 +255,29 @@ public class Dictionary {
 			String lowerCase = toLowerCase(s, locale);
 			int distance = Distance.between(lowerCaseWord, lowerCase);
 			if (distance <= MAX_DISTANCE) {
-				suggestions.merge(lowerCase, new Suggestion(s, lowerCase, distance, true), Suggestion::preferLowerCase);
+				suggestions.merge(lowerCase, new Suggestion(s, lowerCase, distance, true, rankOf(lowerCase)), Suggestion::preferLowerCase);
 			}
 		}
 		for (String edit : editsOf(lowerCaseWord)) {
 			for (String s : wordsFor(codeForString(codec, edit))) {
 				String lowerCase = toLowerCase(s, locale);
 				if (lowerCase.equals(edit)) {
-					suggestions.merge(lowerCase, new Suggestion(s, lowerCase, 1, false), Suggestion::preferLowerCase);
+					suggestions.merge(lowerCase, new Suggestion(s, lowerCase, 1, false, rankOf(lowerCase)), Suggestion::preferLowerCase);
 				}
 			}
 		}
 		return suggestions.values().stream().sorted(Suggestion.ORDER).limit(limit).map(Suggestion::word).toList();
+	}
+
+	/**
+	 * Returns the rank of {@code lowerCaseWord} in this {@code Dictionary}'s language, from 1 for the most common, or one more than the
+	 * least common if it isn't in the frequency list.
+	 * 
+	 * @param lowerCaseWord a word in lower case
+	 * @return rank of {@code lowerCaseWord}
+	 */
+	private int rankOf(String lowerCaseWord) {
+		return ranks.getOrDefault(lowerCaseWord, ranks.size() + 1);
 	}
 
 	/**
@@ -282,14 +316,25 @@ public class Dictionary {
 	 * @param lowerCaseWord {@code word} in lower case
 	 * @param distance      edit distance from the incorrect word, ignoring case
 	 * @param soundsLike    whether {@code word} has the same phonetic code as the incorrect word
+	 * @param rank          rank of {@code word} by how common it is, from 1 for the most common
 	 */
-	private record Suggestion(String word, String lowerCaseWord, int distance, boolean soundsLike) {
+	private record Suggestion(String word, String lowerCaseWord, int distance, boolean soundsLike, int rank) {
 		/**
-		 * Best first: by edit distance, then those that sound like the incorrect word, then alphabetically ignoring case
+		 * Best first: by score, then alphabetically ignoring case
 		 */
-		private static final Comparator<Suggestion> ORDER = Comparator.comparingInt(Suggestion::distance)
-				.thenComparing(Suggestion::soundsLike, Comparator.reverseOrder())
+		private static final Comparator<Suggestion> ORDER = Comparator.comparingDouble(Suggestion::score)
 				.thenComparing(Suggestion::lowerCaseWord);
+
+		/**
+		 * Returns this suggestion's score, lowest best: its edit distance, plus {@link #RANK_WEIGHT} times the natural logarithm of its rank,
+		 * less {@link #SOUNDS_LIKE_BONUS} if it sounds like the incorrect word. A word's probability is roughly proportional to the inverse of
+		 * its rank (Zipf's law), so this weighs how close a suggestion is against how unlikely it is.
+		 * 
+		 * @return score
+		 */
+		private double score() {
+			return distance + RANK_WEIGHT * Math.log(rank) - (soundsLike ? SOUNDS_LIKE_BONUS : 0);
+		}
 
 		/**
 		 * Returns this {@code Suggestion} or {@code other}, which differ only in the case of their words, preferring the one whose word is
@@ -300,7 +345,7 @@ public class Dictionary {
 		 */
 		private Suggestion preferLowerCase(Suggestion other) {
 			Suggestion kept = other.word.equals(other.lowerCaseWord) && !word.equals(lowerCaseWord) ? other : this;
-			return new Suggestion(kept.word, lowerCaseWord, Math.min(distance, other.distance), soundsLike || other.soundsLike);
+			return new Suggestion(kept.word, lowerCaseWord, Math.min(distance, other.distance), soundsLike || other.soundsLike, rank);
 		}
 	}
 
@@ -322,6 +367,33 @@ public class Dictionary {
 			return words;
 		} else {
 			return Stream.concat(baseWords.stream(), words.stream()).distinct().toList();
+		}
+	}
+
+	/**
+	 * Returns the ranks of words in {@code language}'s frequency list, from 1 for the most common.
+	 * 
+	 * @param language a {@link Language}
+	 * @return map from words in lower case to their ranks
+	 * @throws UncheckedIOException if the frequency list cannot be found or read
+	 */
+	private static Map<String, Integer> loadRanks(Language language) {
+		String name = language.frequencyList();
+		try (InputStream is = Dictionary.class.getResourceAsStream(name)) {
+			if (is == null) {
+				throw new FileNotFoundException("Unable to find resource " + name + ".");
+			}
+			Map<String, Integer> ranks = new HashMap<>();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(is), StandardCharsets.UTF_8));
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				if (!line.isBlank()) {
+					ranks.putIfAbsent(line.strip(), ranks.size() + 1);
+				}
+			}
+			return Map.copyOf(ranks);
+		} catch (IOException e) {
+			LOG.error("Unable to load word frequencies from {}.", name, e);
+			throw new UncheckedIOException("Unable to load word frequencies from " + name + ".", e);
 		}
 	}
 
