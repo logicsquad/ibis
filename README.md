@@ -33,8 +33,8 @@ text against a `Dictionary` containing these words:
 
 A `Misspelling` contains the incorrect `Word`, which holds its text and
 start position in the original text, and up to 10 suggestions, which
-may be empty. Suggestions are words in the dictionary that sound like
-the misspelling, closest first:
+may be empty. Suggestions are words in the dictionary that are one
+edit away from the misspelling, or that sound like it, closest first:
 
     Misspelling[word=Word[text=forr, start=16], suggestions=[for, fora, fore...
     Misspelling[word=Word[text=aod, start=49], suggestions=[ad, add, ado, aid...

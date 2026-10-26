@@ -406,4 +406,51 @@ public class DictionaryTest {
 		assertThrows(IllegalArgumentException.class, () -> dictionary.suggestionsFor("allfa", -1));
 		return;
 	}
+
+	// "the" doesn't sound like "teh", and "government" doesn't sound like "goverment", but each is one edit away
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForIncludesWordsOneEditAway() {
+		Dictionary d = Dictionary.builtIn(Locale.ENGLISH);
+		assertTrue(d.suggestionsFor("teh").contains("the"));
+		assertEquals("government", d.suggestionsFor("goverment").get(0));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForFindsEachKindOfEdit() {
+		Dictionary d = Dictionary.builder().addWords(List.of("the", "government", "pasta", "attic")).build();
+		assertEquals(List.of("the"), d.suggestionsFor("teh"));
+		assertEquals(List.of("government"), d.suggestionsFor("goverment"));
+		assertEquals(List.of("pasta"), d.suggestionsFor("pastxa"));
+		assertEquals(List.of("attic"), d.suggestionsFor("attiq"));
+		return;
+	}
+
+	// "ten" is one edit from "teh", but "tea" also sounds like it
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForPrefersWordsThatSoundAlikeAtSameDistance() {
+		Dictionary d = Dictionary.builder().addWords(List.of("ten", "tea")).build();
+		assertEquals(List.of("tea", "ten"), d.suggestionsFor("teh"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForGivesWordsDifferingInCaseOnce() {
+		assertEquals(List.of("ward"), Dictionary.builder().addWords(List.of("Ward", "ward")).build().suggestionsFor("wardd"));
+		assertEquals(List.of("ward"), Dictionary.builder().addWords(List.of("ward", "Ward")).build().suggestionsFor("wardd"));
+		assertEquals(List.of("Ward"), Dictionary.builder().addWord("Ward").build().suggestionsFor("wardd"));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/23
+	@Test
+	public void suggestionsForUsesWordsInBase() {
+		Dictionary d = Dictionary.builder().addWord("the").build().with(List.of("tea"));
+		assertEquals(List.of("tea", "the"), d.suggestionsFor("teh"));
+		return;
+	}
 }
