@@ -13,3 +13,11 @@ jobs:
           java-version: '21'
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
+
+  reuse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check licensing with REUSE
+        uses: fsfe/reuse-action@v6

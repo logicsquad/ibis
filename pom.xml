@@ -21,7 +21,25 @@
       <name>2-Clause BSD License</name>
       <url>https://opensource.org/licenses/BSD-2-Clause</url>
       <distribution>repo</distribution>
-      <comments>See LICENSE in this project.</comments>
+      <comments>Ibis itself. See LICENSE in this project.</comments>
+    </license>
+    <license>
+      <name>3-Clause BSD License</name>
+      <url>https://opensource.org/license/bsd-3-clause</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word list en/names-1.txt.gz. See en/README.md in the jar.</comments>
+    </license>
+    <license>
+      <name>CC0 1.0 Universal</name>
+      <url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word lists en/words-2.txt, en/names-2.txt and en/acronyms.txt. See en/README.md in the jar.</comments>
+    </license>
+    <license>
+      <name>Public Domain (12dicts)</name>
+      <url>http://wordlist.aspell.net/12dicts-readme/</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word list en/words-1.txt.gz. See en/README.md in the jar.</comments>
     </license>
   </licenses>
 
@@ -88,6 +106,19 @@
   </profiles>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <targetPath>META-INF</targetPath>
+        <includes>
+          <include>LICENSE</include>
+          <include>LICENSES/**</include>
+        </includes>
+      </resource>
+    </resources>
     <pluginManagement>
       <plugins>
         <plugin>
