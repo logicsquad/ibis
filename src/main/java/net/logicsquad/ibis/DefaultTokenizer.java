@@ -1,11 +1,12 @@
 package net.logicsquad.ibis;
 
 import java.text.BreakIterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Queue;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -18,10 +19,14 @@ import java.util.Queue;
  * <li>potentially splits words returned by the {@link BreakIterator} into more than one {@link Word} using a {@link Handler}.</li>
  * </ul>
  * 
+ * <p>
+ * A {@code DefaultTokenizer} is immutable and thread-safe.
+ * </p>
+ * 
  * @author paulh
  * @since 0.1
  */
-public class DefaultTokenizer implements Tokenizer {
+class DefaultTokenizer implements Tokenizer {
 	/**
 	 * Character replacements
 	 */
@@ -29,34 +34,9 @@ public class DefaultTokenizer implements Tokenizer {
 			'\u02BC', '\'');
 
 	/**
-	 * A {@link BreakIterator} to perform initial tokenization
+	 * {@link Locale} for {@link BreakIterator}s
 	 */
-	private final BreakIterator breakIterator = BreakIterator.getWordInstance();
-
-	/**
-	 * Text to tokenize
-	 */
-	private final String text;
-
-	/**
-	 * Holds original text if {@link #text} was modified
-	 */
-	private final String rawText;
-
-	/**
-	 * Cursor on start position of a word
-	 */
-	private int start;
-
-	/**
-	 * Cursor on end position of a word
-	 */
-	private int end;
-
-	/**
-	 * A queue to buffer additional {@link Word}s from the {@link Handler}
-	 */
-	private final Queue<Word> queue = new LinkedList<>();
+	private final Locale locale;
 
 	/**
 	 * {@link Handler} for special cases
@@ -69,54 +49,21 @@ public class DefaultTokenizer implements Tokenizer {
 	private final Rejector rejector = new Rejector();
 
 	/**
-	 * Next {@link Word} to return
-	 */
-	private Word next = null;
-
-	/**
 	 * Constructor
 	 * 
 	 * @param locale {@link Locale} for this tokenizer
-	 * @param text a string
-	 * @throws NullPointerException     if either argument is {@code null}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
 	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
-	public DefaultTokenizer(Locale locale, String text) {
-		Objects.requireNonNull(text);
+	DefaultTokenizer(Locale locale) {
+		this.locale = Objects.requireNonNull(locale);
 		handler = Handler.newInstance(locale);
-		if (containsReplacement(text)) {
-			this.text = cleanupText(text);
-			this.rawText = text;
-		} else {
-			this.text = text;
-			this.rawText = null;
-		}
-		breakIterator.setText(this.text);
-		start = breakIterator.first();
-		end = breakIterator.next();
-		primeNext();
 		return;
 	}
 
 	/**
-	 * Does {@code text} contain any characters in the replacements list?
-	 * 
-	 * @param text some text
-	 * @return {@code true} if {@code text} contains any characters in the replacements list, otherwise {@code false}
-	 * @throws NullPointerException if {@code text} is {@code null}
-	 */
-	private static boolean containsReplacement(String text) {
-		Objects.requireNonNull(text);
-		for (Character c : REPLACEMENTS.keySet()) {
-			if (text.indexOf(c) != -1) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Makes character replacements in {@code text} as defined by the replacements map, and returns the modified string.
+	 * Makes character replacements in {@code text} as defined by the replacements map, and returns the modified string. Each replacement is a
+	 * single character, so positions in the result match those in {@code text}.
 	 * 
 	 * @param text some text
 	 * @return {@code text} with character replacements made
@@ -132,57 +79,29 @@ public class DefaultTokenizer implements Tokenizer {
 	}
 
 	@Override
-	public String rawText() {
-		return rawText == null ? text : rawText;
-	}
-
-	@Override
-	public String text() {
-		return text;
-	}
-
-	@Override
-	public boolean hasNext() {
-		return next != null;
+	public Stream<Word> tokenize(String text) {
+		String cleanText = cleanupText(text);
+		// We need to call shouldReject() again, because handler.handle() may have changed the Word
+		return candidates(cleanText).stream()
+				.filter(w -> !rejector.shouldReject(w))
+				.flatMap(w -> handler.handle(w, cleanText).stream())
+				.filter(w -> !rejector.shouldReject(w));
 	}
 
 	/**
-	 * Sets {@link #next} to the next {@link Word}, or {@code null} if there are no more {@link Word}s
-	 */
-	private void primeNext() {
-		Word word;
-		do {
-			// Parts of a Word split by the Handler come before the next candidate
-			Word candidate = queue.isEmpty() ? candidateNext() : queue.remove();
-			word = candidate == null ? null : handler.handle(candidate, text, queue);
-			// We need to call shouldReject() again, because handler.handle() may have changed the Word
-		} while (word != null && rejector.shouldReject(word));
-		next = word;
-		return;
-	}
-
-	/**
-	 * Returns the next {@link Word} from the {@link BreakIterator}. This is a "candidate" because it might be rejected (and it might be
-	 * {@code null}).
+	 * Returns the {@link Word}s found in {@code text} by a {@link BreakIterator}. These are "candidates" because they might be rejected, or
+	 * changed by the {@link Handler}.
 	 * 
-	 * @return candidate next {@link Word}
+	 * @param text some text
+	 * @return candidate {@link Word}s
 	 */
-	private Word candidateNext() {
-		while (end != BreakIterator.DONE) {
-			Word word = Word.of(text.substring(start, end), start);
-			start = end;
-			end = breakIterator.next();
-			if (!rejector.shouldReject(word)) {
-				return word;
-			}
+	private List<Word> candidates(String text) {
+		BreakIterator breakIterator = BreakIterator.getWordInstance(locale);
+		breakIterator.setText(text);
+		List<Word> result = new ArrayList<>();
+		for (int start = breakIterator.first(), end = breakIterator.next(); end != BreakIterator.DONE; start = end, end = breakIterator.next()) {
+			result.add(new Word(text.substring(start, end), start));
 		}
-		return null;
-	}
-
-	@Override
-	public Word next() {
-		Word word = next;
-		primeNext();
-		return word;
+		return result;
 	}
 }

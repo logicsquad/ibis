@@ -1,52 +1,36 @@
 package net.logicsquad.ibis;
 
 import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
- * Tokenizes text into {@link Word}s.
+ * Tokenizes text into {@link Word}s. A {@code Tokenizer} is a strategy that a {@link Checker} holds, so implementations must be thread-safe,
+ * and can tokenize any number of texts.
  * 
  * @author paulh
  * @since 0.2
  */
 public interface Tokenizer {
 	/**
-	 * Returns the raw text supplied to this {@code Tokenizer}.
+	 * Returns the {@link Word}s to check in {@code text}, in order.
 	 * 
-	 * @return raw text
+	 * @param text a string
+	 * @return a {@link Stream} of {@link Word}s
+	 * @throws NullPointerException if {@code text} is {@code null}
+	 * @since 0.4
 	 */
-	String rawText();
+	Stream<Word> tokenize(String text);
 
 	/**
-	 * Returns the <em>potentially modified</em> text used in tokenization.
-	 * 
-	 * @return <em>potentially modified</em> text
-	 */
-	String text();
-
-	/**
-	 * Are there more {@link Word}s to return?
-	 * 
-	 * @return {@code true} if there are more {@link Word}s, otherwise {@code false}
-	 */
-	boolean hasNext();
-
-	/**
-	 * Returns the next {@link Word}.
-	 * 
-	 * @return next {@link Word}
-	 */
-	Word next();
-
-	/**
-	 * Returns a {@code Tokenizer} for {@code text}.
+	 * Returns the built-in {@code Tokenizer} for {@code locale}.
 	 *
-	 * @param locale {@link Locale} of {@code text}
-	 * @param text   a string
+	 * @param locale a {@link Locale}
 	 * @return {@link Tokenizer}
-	 * @throws NullPointerException     if either argument is {@code null}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
 	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
+	 * @since 0.4
 	 */
-	static Tokenizer newInstance(Locale locale, String text) {
-		return new DefaultTokenizer(locale, text);
+	static Tokenizer forLocale(Locale locale) {
+		return new DefaultTokenizer(locale);
 	}
 }

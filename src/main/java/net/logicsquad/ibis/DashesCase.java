@@ -3,7 +3,6 @@ package net.logicsquad.ibis;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -44,10 +43,9 @@ class DashesCase implements Case {
 	}
 
 	@Override
-	public Word handle(Word word, String text, Queue<Word> queue) {
+	public List<Word> handle(Word word, String text) {
 		Objects.requireNonNull(word);
 		Objects.requireNonNull(text);
-		Objects.requireNonNull(queue);
 		List<Word> parts = new ArrayList<>();
 		int i = 0;
 		while (i < word.length() && isDash(word.text().charAt(i))) {
@@ -60,7 +58,7 @@ class DashesCase implements Case {
 				sb.append(word.text().charAt(i));
 				i++;
 			}
-			parts.add(Word.of(sb.toString(), start + word.start()));
+			parts.add(new Word(sb.toString(), start + word.start()));
 			while (i < word.length() && isDash(word.text().charAt(i))) {
 				i++;
 			}
@@ -70,11 +68,8 @@ class DashesCase implements Case {
 			int to = Math.clamp(word.end() + 50L, from, text.length());
 			LOG.error("Unable to handle {} in context:'{}'", word, text.substring(from, to));
 			throw new IllegalArgumentException("No text found.");
-		} else if (parts.size() > 1) {
-			// skip(1) because we want to return the first element below
-			parts.stream().skip(1).forEach(p -> queue.add(handle(p, text, queue)));
 		}
-		return parts.getFirst();
+		return parts;
 	}
 
 	static boolean isDash(char c) {

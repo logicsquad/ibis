@@ -1,6 +1,8 @@
 package net.logicsquad.ibis;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,17 +12,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
-import org.apache.commons.codec.language.Metaphone;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +40,8 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  * <p>
- * A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
+ * A {@code Dictionary} has a {@link Locale}, which selects its phonetic encoder, its built-in word lists, and the {@link Tokenizer} that a
+ * {@link Checker} uses with it. A {@code Dictionary} is immutable and thread-safe, so a single instance can be shared between threads.
  * </p>
  * 
  * @author paulh
@@ -47,6 +52,11 @@ public class Dictionary {
 	 * Logger
 	 */
 	private static final Logger LOG = LoggerFactory.getLogger(Dictionary.class);
+
+	/**
+	 * Locale of words in this {@code Dictionary}
+	 */
+	private final Locale locale;
 
 	/**
 	 * Codec for providing phonetic representations
@@ -65,68 +75,145 @@ public class Dictionary {
 	private final Map<String, List<String>> map;
 
 	/**
+	 * Optional {@code Dictionary} whose words this one shares rather than copies
+	 */
+	private final Dictionary base;
+
+	/**
+	 * Built-in {@code Dictionary}s, built on first use
+	 */
+	private static final Map<Language, Dictionary> BUILT_IN = new ConcurrentHashMap<>();
+
+	/**
 	 * Constructor
 	 * 
-	 * @param codec a {@link StringEncoder}
-	 * @param map map from phonetic representations to word lists
+	 * @param locale a {@link Locale}
+	 * @param codec  a {@link StringEncoder}
+	 * @param map    map from phonetic representations to word lists
+	 * @param base   optional {@code Dictionary} whose words this one shares
 	 */
-	private Dictionary(StringEncoder codec, Map<String, List<String>> map) {
+	private Dictionary(Locale locale, StringEncoder codec, Map<String, List<String>> map, Dictionary base) {
+		this.locale = locale;
 		this.codec = codec;
 		this.map = map;
+		this.base = base;
 		return;
 	}
 
 	/**
-	 * Does {@code word} contain a word that is spelled correctly?
+	 * Returns the shared {@code Dictionary} of built-in words for the language of {@code locale}, building it on first use. Its
+	 * {@link #locale()} is the language alone, such as {@link Locale#ENGLISH} for {@link Locale#UK}.
 	 * 
-	 * @param word a {@link Word}
-	 * @return {@code true} if {@code word} contains a word that is spelled correctly, otherwise {@code false}
+	 * @param locale a {@link Locale}
+	 * @return built-in {@code Dictionary}
+	 * @throws NullPointerException     if {@code locale} is {@code null}
+	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
+	 * @since 0.4
+	 */
+	public static Dictionary builtIn(Locale locale) {
+		return BUILT_IN.computeIfAbsent(Language.of(locale), language -> new Builder(language.locale()).loadBuiltInWords().build());
+	}
+
+	/**
+	 * Returns a new {@code Dictionary} containing {@code words} as well as the words in this one, which it shares rather than copies.
+	 * 
+	 * @param words a {@link Collection} of words
+	 * @return new {@code Dictionary}
+	 * @throws NullPointerException if {@code words} is {@code null}, or contains {@code null}
+	 * @since 0.4
+	 */
+	public Dictionary with(Collection<String> words) {
+		return new Builder(locale, this).addWords(words).build();
+	}
+
+	/**
+	 * Returns the {@link Locale} of words in this {@code Dictionary}.
+	 * 
+	 * @return {@link Locale}
+	 * @since 0.4
+	 */
+	public Locale locale() {
+		return locale;
+	}
+
+	/**
+	 * Is {@code word} spelled correctly? A word is correct if this {@code Dictionary} contains it verbatim, in lower case, or with an initial
+	 * capital.
+	 * 
+	 * @param word a word
+	 * @return {@code true} if {@code word} is spelled correctly, otherwise {@code false}
 	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
-	public boolean isCorrect(Word word) {
+	public boolean isCorrect(String word) {
 		Objects.requireNonNull(word);
-		String code = codeForWord(word);
-		if (map.containsKey(code)) {
-			if (map.get(code).contains(word.text())) {
-				// Verbatim
-				return true;
-			} else if (map.get(code).contains(word.toLowerCase())) {
-				// All lower case
-				return true;
-			} else {
-				// Initial cap
-				return map.get(code).contains(word.toInitialCap());
-			}
+		List<String> words = wordsFor(codeForString(codec, word));
+		return (words.contains(word) || words.contains(toLowerCase(word, locale)) || words.contains(toInitialCap(word, locale)));
+	}
+
+	/**
+	 * Returns a list of suggestions for {@code word}, or an empty list if {@code word} is spelled correctly.
+	 * 
+	 * @param word a word
+	 * @return a list of suggestions
+	 * @throws NullPointerException if {@code word} is {@code null}
+	 */
+	public List<String> suggestionsFor(String word) {
+		Objects.requireNonNull(word);
+		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word);
+	}
+
+	/**
+	 * Returns a list of suggestions for {@code word}, which the caller already knows to be spelled incorrectly.
+	 * 
+	 * @param word an incorrect word
+	 * @return a list of suggestions
+	 */
+	List<String> suggestionsForIncorrect(String word) {
+		return wordsFor(codeForString(codec, word)).stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+	}
+
+	/**
+	 * Returns the words with phonetic representation {@code code}, including those in {@link #base}.
+	 * 
+	 * @param code a phonetic representation
+	 * @return list of words
+	 */
+	private List<String> wordsFor(String code) {
+		List<String> words = map.getOrDefault(code, List.of());
+		if (base == null) {
+			return words;
+		}
+		List<String> baseWords = base.wordsFor(code);
+		if (words.isEmpty()) {
+			return baseWords;
+		} else if (baseWords.isEmpty()) {
+			return words;
 		} else {
-			return false;
+			return Stream.concat(baseWords.stream(), words.stream()).distinct().toList();
 		}
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}.
-	 * 
-	 * @param word a {@link Word}
-	 * @return a list of suggestions
-	 * @throws IllegalArgumentException if {@code word} already contains a word spelled correctly
-	 * @throws NullPointerException     if {@code word} is {@code null}
+	 * Returns {@code word} as lower case, using the rules of {@code locale} rather than the default {@link Locale}.
+	 *
+	 * @param word   a word
+	 * @param locale a {@link Locale}
+	 * @return {@code word} as lower case
 	 */
-	public List<String> suggestionsFor(Word word) {
-		Objects.requireNonNull(word);
-		if (isCorrect(word)) {
-			throw new IllegalArgumentException("word is correct.");
-		}
-		String code = codeForWord(word);
-		if (map.containsKey(code)) {
-			List<String> result = new ArrayList<>();
-			for (String s : map.get(code)) {
-				if (LevenshteinDistance.getDefaultInstance().apply(word.text(), s) < MAX_DISTANCE) {
-					result.add(s);
-				}
-			}
-			return result;
-		} else {
-			return List.of();
-		}
+	static String toLowerCase(String word, Locale locale) {
+		return word.toLowerCase(locale);
+	}
+
+	/**
+	 * Returns {@code word} with first character upper case, and remainder lower case, using the rules of {@code locale} rather than the
+	 * default {@link Locale}. If {@code word} is empty, returns it unchanged.
+	 *
+	 * @param word   a word
+	 * @param locale a {@link Locale}
+	 * @return {@code word} with initial cap
+	 */
+	static String toInitialCap(String word, Locale locale) {
+		return word.isEmpty() ? word : word.substring(0, 1).toUpperCase(locale) + word.substring(1).toLowerCase(locale);
 	}
 
 	/**
@@ -143,16 +230,6 @@ public class Dictionary {
 			LOG.error("Unable to encode '{}'.", word, e);
 			return null;
 		}
-	}
-
-	/**
-	 * Returns a code for {@code word} using {@link StringEncoder}.
-	 * 
-	 * @param word a {@link Word}
-	 * @return code for {@code word}
-	 */
-	private String codeForWord(Word word) {
-		return codeForString(codec, word.text());
 	}
 
 	/**
@@ -182,34 +259,9 @@ public class Dictionary {
 	 */
 	public static class Builder {
 		/**
-		 * World list 1
+		 * First two bytes of a stream compressed with GZip
 		 */
-		private static final String WORDS_1 = "/en/words-1.txt.gz";
-
-		/**
-		 * World list 2
-		 */
-		private static final String WORDS_2 = "/en/words-2.txt";
-
-		/**
-		 * Names list 1
-		 */
-		private static final String NAMES_1 = "/en/names-1.txt.gz";
-
-		/**
-		 * Names list 2
-		 */
-		private static final String NAMES_2 = "/en/names-2.txt";
-
-		/**
-		 * Acronyms list
-		 */
-		private static final String ACRONYMS = "/en/acronyms.txt";
-
-		/**
-		 * Extension for compressed lists
-		 */
-		private static final String GZIP_EXTENSION = ".gz";
+		private static final int GZIP_MAGIC = GZIPInputStream.GZIP_MAGIC;
 
 		/**
 		 * Map from phonetic codes to lists of words
@@ -222,9 +274,19 @@ public class Dictionary {
 		private final Locale locale;
 
 		/**
+		 * {@link Language} of {@link #locale}
+		 */
+		private final Language language;
+
+		/**
 		 * {@link StringEncoder} suitable for locale
 		 */
 		private final StringEncoder codec;
+
+		/**
+		 * Optional {@code Dictionary} whose words the new {@code Dictionary} shares
+		 */
+		private Dictionary base;
 
 		/**
 		 * Constructor taking a {@link Locale}
@@ -232,109 +294,178 @@ public class Dictionary {
 		 * @since 0.2
 		 */
 		private Builder(Locale locale) {
-			this.locale = locale;
-			codec = switch (locale.getLanguage()) {
-			case "en" -> new Metaphone();
-			default -> throw new IllegalArgumentException("Unknown Locale: " + locale);
-			};
+			this(locale, null);
 			return;
 		}
 
 		/**
-		 * Adds words from all built-in word lists for the language of {@link #locale}.
+		 * Constructor taking a {@link Locale} and a {@code Dictionary} to share words with
+		 * 
+		 * @param locale a {@link Locale}
+		 * @param base   optional {@code Dictionary} whose words the new {@code Dictionary} shares
+		 */
+		private Builder(Locale locale, Dictionary base) {
+			language = Language.of(locale);
+			this.locale = locale;
+			this.base = base;
+			codec = language.encoder();
+			return;
+		}
+
+		/**
+		 * Adds words from all built-in word lists for the language of {@link #locale}. The new {@code Dictionary} shares them with
+		 * {@link Dictionary#builtIn(Locale)} rather than copying them.
 		 *
 		 * @return this object
+		 * @since 0.4
 		 */
-		public Builder addWords() {
-			if ("en".equals(locale.getLanguage())) {
-				addWords(WORDS_1);
-				addWords(WORDS_2);
-				addWords(NAMES_1);
-				addWords(NAMES_2);
-				addWords(ACRONYMS);
+		public Builder addBuiltInWords() {
+			if (base == null) {
+				base = Dictionary.builtIn(locale);
+			} else {
+				loadBuiltInWords();
 			}
 			return this;
 		}
 
 		/**
-		 * Adds words from {@code resourceName} on classpath. The resource must be encoded in UTF-8, and is decompressed with GZip if its name
-		 * ends with {@code .gz}.
+		 * Adds copies of words from all built-in word lists for the language of {@link #locale}.
 		 *
-		 * @param resourceName name of a resource on classpath
 		 * @return this object
-		 * @throws NullPointerException     if {@code resourceName} is {@code null}
-		 * @throws IllegalArgumentException if the resource cannot be found or read
 		 */
-		public Builder addWords(String resourceName) {
+		private Builder loadBuiltInWords() {
+			language.builtInWordLists().forEach(name -> addWords(Dictionary.class, name));
+			return this;
+		}
+
+		/**
+		 * Adds words from the resource {@code resourceName}, found through {@code context} with {@link Class#getResourceAsStream(String)}, so
+		 * that a name starting with {@code /} is absolute, and any other name is relative to the package of {@code context}. The resource must
+		 * be encoded in UTF-8, and is decompressed if it is compressed with GZip.
+		 *
+		 * @param context      a {@link Class} whose class loader and package are used to find the resource
+		 * @param resourceName name of a resource
+		 * @return this object
+		 * @throws NullPointerException if either argument is {@code null}
+		 * @throws UncheckedIOException if the resource cannot be found or read
+		 * @since 0.4
+		 */
+		public Builder addWords(Class<?> context, String resourceName) {
+			Objects.requireNonNull(context);
 			Objects.requireNonNull(resourceName);
 			LOG.debug("Adding words from resource '{}'...", resourceName);
-			InputStream is = Dictionary.class.getResourceAsStream(resourceName);
-			if (is == null) {
-				LOG.error("Unable to find resource {}.", resourceName);
-				throw new IllegalArgumentException("Unable to find resource " + resourceName + ".");
-			}
-			return readWords(is, resourceName);
-		}
-
-		/**
-		 * Adds words from {@code reader}, then closes it.
-		 *
-		 * @param reader a {@link Reader}
-		 * @return this object
-		 * @throws NullPointerException     if {@code reader} is {@code null}
-		 * @throws IllegalArgumentException if {@code reader} cannot be read
-		 */
-		public Builder addWords(Reader reader) {
-			Objects.requireNonNull(reader);
-			try (BufferedReader bufferedReader = new BufferedReader(reader)) {
-				bufferedReader.lines().forEach(this::addWord);
+			try (InputStream is = context.getResourceAsStream(resourceName)) {
+				if (is == null) {
+					throw new FileNotFoundException("Unable to find resource " + resourceName + ".");
+				}
+				return readWords(is);
 			} catch (IOException | UncheckedIOException e) {
-				LOG.error("Unable to add words from Reader.", e);
-				throw new IllegalArgumentException("Unable to add words from Reader.", e);
+				LOG.error("Unable to add words from {}.", resourceName, e);
+				throw new UncheckedIOException("Unable to add words from " + resourceName + ".", unwrap(e));
 			}
-			return this;
 		}
 
 		/**
-		 * Adds words from file at {@code path}. The file must be encoded in UTF-8, and is decompressed with GZip if its name ends with
-		 * {@code .gz}.
+		 * Adds words from file at {@code path}. The file must be encoded in UTF-8, and is decompressed if it is compressed with GZip.
 		 *
 		 * @param path a {@link Path}
 		 * @return this object
-		 * @throws NullPointerException     if {@code path} is {@code null}
-		 * @throws IllegalArgumentException if the file cannot be read
+		 * @throws NullPointerException if {@code path} is {@code null}
+		 * @throws UncheckedIOException if the file cannot be read
 		 */
 		public Builder addWords(Path path) {
 			Objects.requireNonNull(path);
 			LOG.debug("Adding words from path '{}'...", path);
-			InputStream is;
-			try {
-				is = Files.newInputStream(path);
-			} catch (IOException e) {
+			try (InputStream is = Files.newInputStream(path)) {
+				return readWords(is);
+			} catch (IOException | UncheckedIOException e) {
 				LOG.error("Unable to add words from {}.", path, e);
-				throw new IllegalArgumentException("Unable to add words from " + path + ".", e);
+				throw new UncheckedIOException("Unable to add words from " + path + ".", unwrap(e));
 			}
-			return readWords(is, path.toString());
 		}
 
 		/**
-		 * Adds words from {@code is}, then closes it. {@code is} must contain text encoded in UTF-8, and is decompressed with GZip if
-		 * {@code name} ends with {@code .gz}.
+		 * Adds words from {@code is}, which must contain text encoded in UTF-8, and is decompressed if it is compressed with GZip. The caller
+		 * remains responsible for closing {@code is}.
 		 *
-		 * @param is   an {@link InputStream}
-		 * @param name name of the word list {@code is} reads
+		 * @param is an {@link InputStream}
 		 * @return this object
-		 * @throws IllegalArgumentException if {@code is} cannot be read, or does not contain valid UTF-8
+		 * @throws NullPointerException if {@code is} is {@code null}
+		 * @throws UncheckedIOException if {@code is} cannot be read
+		 * @since 0.4
 		 */
-		private Builder readWords(InputStream is, String name) {
-			try (InputStream in = is;
-					BufferedReader reader = new BufferedReader(new InputStreamReader(isGzipped(name) ? new GZIPInputStream(in) : in, StandardCharsets.UTF_8.newDecoder()))) {
-				reader.lines().forEach(this::addWord);
+		public Builder addWords(InputStream is) {
+			Objects.requireNonNull(is);
+			try {
+				return readWords(is);
 			} catch (IOException | UncheckedIOException e) {
-				LOG.error("Unable to add words from {}.", name, e);
-				throw new IllegalArgumentException("Unable to add words from " + name + ".", e);
+				LOG.error("Unable to add words from InputStream.", e);
+				throw new UncheckedIOException("Unable to add words from InputStream.", unwrap(e));
+			}
+		}
+
+		/**
+		 * Adds words from {@code reader}, one per line. The caller remains responsible for closing {@code reader}.
+		 *
+		 * @param reader a {@link Reader}
+		 * @return this object
+		 * @throws NullPointerException if {@code reader} is {@code null}
+		 * @throws UncheckedIOException if {@code reader} cannot be read
+		 */
+		public Builder addWords(Reader reader) {
+			Objects.requireNonNull(reader);
+			try {
+				// Not closed, because closing the BufferedReader would close reader
+				new BufferedReader(reader).lines().forEach(this::addWord);
+			} catch (UncheckedIOException e) {
+				LOG.error("Unable to add words from Reader.", e);
+				throw new UncheckedIOException("Unable to add words from Reader.", e.getCause());
 			}
 			return this;
+		}
+
+		/**
+		 * Adds each of {@code words}, as {@link #addWord(String)} does.
+		 *
+		 * @param words a {@link Collection} of words
+		 * @return this object
+		 * @throws NullPointerException if {@code words} is {@code null}, or contains {@code null}
+		 * @since 0.4
+		 */
+		public Builder addWords(Collection<String> words) {
+			Objects.requireNonNull(words);
+			words.forEach(this::addWord);
+			return this;
+		}
+
+		/**
+		 * Adds words from {@code is}, without closing it. {@code is} must contain text encoded in UTF-8, and is decompressed if it starts with
+		 * the GZip magic number.
+		 *
+		 * @param is an {@link InputStream}
+		 * @return this object
+		 * @throws IOException          if {@code is} cannot be read
+		 * @throws UncheckedIOException if {@code is} cannot be read, or does not contain valid UTF-8
+		 */
+		private Builder readWords(InputStream is) throws IOException {
+			InputStream in = new BufferedInputStream(is);
+			in.mark(2);
+			int magic = in.read() | (in.read() << 8);
+			in.reset();
+			// Neither GZIPInputStream nor the readers below are closed, because closing them would close is
+			Reader reader = new InputStreamReader(magic == GZIP_MAGIC ? new GZIPInputStream(in) : in, StandardCharsets.UTF_8.newDecoder());
+			new BufferedReader(reader).lines().forEach(this::addWord);
+			return this;
+		}
+
+		/**
+		 * Returns the {@link IOException} behind {@code e}.
+		 *
+		 * @param e an {@link IOException} or {@link UncheckedIOException}
+		 * @return {@code e}, or the cause of an {@link UncheckedIOException}
+		 */
+		private static IOException unwrap(Exception e) {
+			return e instanceof UncheckedIOException u ? u.getCause() : (IOException) e;
 		}
 
 		/**
@@ -360,17 +491,6 @@ public class Dictionary {
 		}
 
 		/**
-		 * Does {@code name} represent a file compressed with GZip?
-		 *
-		 * @param name name of a resource or file
-		 * @return {@code true} if it looks like the file is compressed with GZip, otherwise {@code false}
-		 */
-		private static boolean isGzipped(String name) {
-			Objects.requireNonNull(name);
-			return name.endsWith(GZIP_EXTENSION);
-		}
-
-		/**
 		 * Creates and returns a new {@code Dictionary} from this {@code Builder}. The new {@code Dictionary} holds a copy of the words added so
 		 * far, so adding words to this {@code Builder} afterwards does not change it.
 		 * 
@@ -379,7 +499,7 @@ public class Dictionary {
 		public Dictionary build() {
 			Map<String, List<String>> copy = HashMap.newHashMap(map.size());
 			map.forEach((code, words) -> copy.put(code, List.copyOf(words)));
-			return new Dictionary(codec, Collections.unmodifiableMap(copy));
+			return new Dictionary(locale, codec, Collections.unmodifiableMap(copy), base);
 		}
 	}
 

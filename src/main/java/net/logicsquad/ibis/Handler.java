@@ -2,7 +2,6 @@ package net.logicsquad.ibis;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
 
 /**
  * A {@code Handler} handles <em>special cases</em> for a {@link Tokenizer} by potentially breaking a {@link Word} into smaller component
@@ -13,24 +12,23 @@ import java.util.Queue;
  * @author paulh
  * @since 0.2
  */
-public interface Handler {
+interface Handler {
 	/**
 	 * <p>
-	 * Examines {@code word} for special cases, and <em>either:</em>
+	 * Examines {@code word} for special cases, and returns a list that <em>either:</em>
 	 * </p>
 	 * 
 	 * <ul>
-	 * <li>returns {@code word} without alteration;</li>
-	 * <li>alters the text content of {@code word}, returning a new {@link Word}; or</li>
-	 * <li>breaks {@code word} into component parts, returning the first {@link Word} and pushing any remaining parts onto {@code queue}.</li>
+	 * <li>contains {@code word} without alteration;</li>
+	 * <li>contains a new {@link Word} with altered text content; or</li>
+	 * <li>contains the component parts of {@code word}.</li>
 	 * </ul>
-	 *
-	 * @param word  a {@link Word}
-	 * @param text  containing text for {@code word}
-	 * @param queue a {@link Queue}
-	 * @return a {@link Word} as described above
+	 * 
+	 * @param word a {@link Word}
+	 * @param text containing text for {@code word}
+	 * @return list of one or more {@link Word}s
 	 */
-	Word handle(Word word, String text, Queue<Word> queue);
+	List<Word> handle(Word word, String text);
 
 	/**
 	 * Returns a new {@link Handler} for {@link Locale} {@code locale}.
@@ -41,9 +39,6 @@ public interface Handler {
 	 * @throws IllegalArgumentException if the language of {@code locale} is not supported
 	 */
 	static Handler newInstance(Locale locale) {
-		return switch (locale.getLanguage()) {
-		case "en" -> new CaseHandler(List.of(new DashesCase(), new AbbreviationsCase(), new PossessiveCase()));
-		default -> throw new IllegalArgumentException("Unsupported Locale: " + locale);
-		}; 
+		return Language.of(locale).handler();
 	}
 }
