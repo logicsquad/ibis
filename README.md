@@ -82,6 +82,9 @@ Contributing
 By all means, open issue tickets and pull requests if you have
 something to contribute.
 
+[docs/design.md](docs/design.md) describes how Ibis works: how it
+finds words, stores and checks them, and suggests corrections.
+
 Influences
 ----------
 The landscape of open source spell checkers for Java is a little
