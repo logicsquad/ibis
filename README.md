@@ -32,10 +32,11 @@ text against a `Dictionary` containing these words:
     }
 
 A `Misspelling` contains the incorrect `Word`, which holds its text and
-start position in the original text, and a list of suggestions (based
-on phonetic matches with words in the dictionary), which may be empty:
+start position in the original text, and up to 10 suggestions, which
+may be empty. Suggestions are words in the dictionary that sound like
+the misspelling, closest first:
 
-    Misspelling[word=Word[text=forr, start=16], suggestions=[fair, fairy, far...
+    Misspelling[word=Word[text=forr, start=16], suggestions=[for, fora, fore...
     Misspelling[word=Word[text=aod, start=49], suggestions=[ad, add, ado, aid...
 
 A `Checker` is immutable and thread-safe, so you can create one and use

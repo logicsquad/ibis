@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -25,7 +26,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
-import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +64,14 @@ public class Dictionary {
 	private final StringEncoder codec;
 
 	/**
-	 * Maximum <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> between an incorrect word and suggestions
-	 * returned
+	 * Maximum edit distance between an incorrect word and its suggestions
 	 */
-	private static final int MAX_DISTANCE = 4;
+	private static final int MAX_DISTANCE = 3;
+
+	/**
+	 * Maximum number of suggestions returned by {@link #suggestionsFor(String)}
+	 */
+	static final int MAX_SUGGESTIONS = 10;
 
 	/**
 	 * Map for words keyed on phonetic representation
@@ -151,25 +155,76 @@ public class Dictionary {
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}, or an empty list if {@code word} is spelled correctly.
+	 * Returns up to 10 suggestions for {@code word}, best first, or an empty list if {@code word} is spelled correctly. See
+	 * {@link #suggestionsFor(String, int)}.
 	 * 
 	 * @param word a word
 	 * @return a list of suggestions
 	 * @throws NullPointerException if {@code word} is {@code null}
 	 */
 	public List<String> suggestionsFor(String word) {
-		Objects.requireNonNull(word);
-		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word);
+		return suggestionsFor(word, MAX_SUGGESTIONS);
 	}
 
 	/**
-	 * Returns a list of suggestions for {@code word}, which the caller already knows to be spelled incorrectly.
+	 * <p>
+	 * Returns up to {@code limit} suggestions for {@code word}, best first, or an empty list if {@code word} is spelled correctly.
+	 * </p>
 	 * 
-	 * @param word an incorrect word
+	 * <p>
+	 * Suggestions are the words in this {@code Dictionary} that sound like {@code word} (they have the same phonetic code) and are within an
+	 * edit distance of 3 of it. The edit distance counts an insertion, deletion, substitution or transposition of adjacent characters as one
+	 * edit, and ignores case. Suggestions are ordered by edit distance, then alphabetically.
+	 * </p>
+	 * 
+	 * @param word  a word
+	 * @param limit maximum number of suggestions
+	 * @return a list of suggestions
+	 * @throws NullPointerException     if {@code word} is {@code null}
+	 * @throws IllegalArgumentException if {@code limit} is negative
+	 * @since 0.5
+	 */
+	public List<String> suggestionsFor(String word, int limit) {
+		Objects.requireNonNull(word);
+		if (limit < 0) {
+			throw new IllegalArgumentException("limit must not be negative.");
+		}
+		return isCorrect(word) ? List.of() : suggestionsForIncorrect(word, limit);
+	}
+
+	/**
+	 * Returns up to {@code limit} suggestions for {@code word}, which the caller already knows to be spelled incorrectly, as
+	 * {@link #suggestionsFor(String, int)} does.
+	 * 
+	 * @param word  an incorrect word
+	 * @param limit maximum number of suggestions
 	 * @return a list of suggestions
 	 */
-	List<String> suggestionsForIncorrect(String word) {
-		return wordsFor(codeForString(codec, word)).stream().filter(s -> LevenshteinDistance.getDefaultInstance().apply(word, s) < MAX_DISTANCE).toList();
+	List<String> suggestionsForIncorrect(String word, int limit) {
+		String lowerCaseWord = toLowerCase(word, locale);
+		return wordsFor(codeForString(codec, word)).stream()
+				.map(s -> new Suggestion(s, toLowerCase(s, locale), Distance.between(lowerCaseWord, toLowerCase(s, locale))))
+				.filter(s -> s.distance() <= MAX_DISTANCE)
+				.sorted(Suggestion.ORDER)
+				.limit(limit)
+				.map(Suggestion::word)
+				.toList();
+	}
+
+	/**
+	 * A candidate suggestion, with what's needed to rank it.
+	 * 
+	 * @param word          a word from this {@code Dictionary}
+	 * @param lowerCaseWord {@code word} in lower case
+	 * @param distance      edit distance from the incorrect word, ignoring case
+	 */
+	private record Suggestion(String word, String lowerCaseWord, int distance) {
+		/**
+		 * Best first: by edit distance, then alphabetically ignoring case, then alphabetically
+		 */
+		private static final Comparator<Suggestion> ORDER = Comparator.comparingInt(Suggestion::distance)
+				.thenComparing(Suggestion::lowerCaseWord)
+				.thenComparing(Suggestion::word);
 	}
 
 	/**
