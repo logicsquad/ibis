@@ -7,7 +7,7 @@
 
   <groupId>net.logicsquad</groupId>
   <artifactId>ibis-parent</artifactId>
-  <version>0.7-SNAPSHOT</version>
+  <version>0.7</version>
   <packaging>pom</packaging>
   <name>Ibis parent</name>
   <description>Ibis, a simple spell checker for Java applications, and its command line.</description>

@@ -6,7 +6,7 @@
   <parent>
     <groupId>net.logicsquad</groupId>
     <artifactId>ibis-parent</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.7</version>
   </parent>
 
   <artifactId>ibis-cli</artifactId>
