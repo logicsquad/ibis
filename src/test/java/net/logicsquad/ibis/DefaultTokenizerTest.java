@@ -108,6 +108,8 @@ public class DefaultTokenizerTest {
 	private static final List<String> EXPECTED_URL_3 = List.of("Visit", "today");
 	private static final String URL_4 = "(See HTTPS://EXAMPLE.COM/a), then stop.";
 	private static final List<String> EXPECTED_URL_4 = List.of("See", "then", "stop");
+	private static final String URL_5 = "Fetch ftp://files.example.com/pub/notes.txt first.";
+	private static final List<String> EXPECTED_URL_5 = List.of("Fetch", "first");
 	private static final String EMAIL = "Email privacy@logicsquad.net, or write to mailto:help@example.com today.";
 	private static final List<Word> EXPECTED_EMAIL = List.of(new Word("Email", 0), new Word("or", 30), new Word("write", 33), new Word("to", 39),
 			new Word("today", 66));
@@ -115,6 +117,10 @@ public class DefaultTokenizerTest {
 	// A colon alone doesn't make a URL
 	private static final String COLONS = "Note:this and Note: that";
 	private static final List<String> EXPECTED_COLONS = List.of("Note", "this", "and", "Note", "that");
+
+	// Outside a URL, a protocol name is a word like any other
+	private static final String PROTOCOL_NAMES = "Served over https, not http or ftp.";
+	private static final List<String> EXPECTED_PROTOCOL_NAMES = List.of("Served", "over", "https", "not", "http", "or", "ftp");
 
 	// A long run of the characters that URLs and email addresses are made of, which a careless pattern scans in quadratic time
 	private static final String LONG_RUN = "a.".repeat(100_000);
@@ -272,6 +278,7 @@ public class DefaultTokenizerTest {
 		testTokenizerAndStringList(URL_2, EXPECTED_URL_2);
 		testTokenizerAndStringList(URL_3, EXPECTED_URL_3);
 		testTokenizerAndStringList(URL_4, EXPECTED_URL_4);
+		testTokenizerAndStringList(URL_5, EXPECTED_URL_5);
 		return;
 	}
 
@@ -286,6 +293,13 @@ public class DefaultTokenizerTest {
 	@Test
 	public void tokenizerKeepsWordsAroundColons() {
 		testTokenizerAndStringList(COLONS, EXPECTED_COLONS);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/28
+	@Test
+	public void tokenizerKeepsProtocolNamesOutsideUrls() {
+		testTokenizerAndStringList(PROTOCOL_NAMES, EXPECTED_PROTOCOL_NAMES);
 		return;
 	}
 

@@ -1,6 +1,5 @@
 package net.logicsquad.ibis;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -11,21 +10,20 @@ import java.util.regex.Pattern;
  * </p>
  * 
  * <ul>
+ * <li>it is shorter than two characters;</li>
  * <li>it doesn't start with a letter;</li>
- * <li>it contains one or more digits;</li>
- * <li>it is an internet protocol name (e.g., "http"); or</li>
+ * <li>it contains one or more digits; or</li>
  * <li>it appears to be a domain name.</li>
  * </ul>
+ * 
+ * <p>
+ * {@link DefaultTokenizer} drops the words within URLs and email addresses before this class sees them.
+ * </p>
  * 
  * @author paulh
  * @since 0.1
  */
 class Rejector {
-	/**
-	 * List of protocol names to reject
-	 */
-	private static final List<String> PROTOCOLS = List.of("http", "https", "ftp");
-
 	/**
 	 * Regex matching (most) domain names
 	 */
@@ -45,7 +43,7 @@ class Rejector {
 	 */
 	boolean shouldReject(Word word) {
 		Objects.requireNonNull(word);
-		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || PROTOCOLS.contains(word.text()) || isDomainName(word);
+		return word.length() < 2 || !Character.isLetter(word.text().charAt(0)) || containsDigit(word) || isDomainName(word);
 	}
 
 	/**

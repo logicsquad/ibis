@@ -55,7 +55,6 @@ position, as a `char` index into the original text.
    - is shorter than two characters;
    - doesn't start with a letter, which drops spaces and punctuation;
    - contains a digit;
-   - is `http`, `https` or `ftp`;
    - looks like a domain name.
 5. **Handling special cases:** a `Handler` rewrites or splits what's
    left, and `Rejector` checks the results again. The handler tries
