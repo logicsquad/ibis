@@ -10,6 +10,12 @@ Ibis is a minimal implementation of a [spell
 checker](https://en.wikipedia.org/wiki/Spell_checker) for use in Java
 projects.
 
+There are two modules:
+
+* `ibis`: the library.
+* `ibis-cli`: a command line that checks the spelling in text and XML
+  files.
+
 Getting started
 ---------------
 
@@ -19,7 +25,7 @@ as a Maven dependency:
     <dependency>
       <groupId>net.logicsquad</groupId>
       <artifactId>ibis</artifactId>
-      <version>0.6</version>
+      <version>0.7</version>
     </dependency>
 
 Ibis ships with some built-in word lists, and you can start checking
@@ -68,6 +74,45 @@ words to an existing `Dictionary` without copying it, use `with()`:
 
     Dictionary dict = Dictionary.builtIn(Locale.ENGLISH).with(List.of("Ibis", "tokenizer"));
 
+Using the command line
+----------------------
+`ibis-cli`'s jar contains everything it needs. You can fetch it from
+Maven Central with:
+
+    mvn dependency:copy -Dartifact=net.logicsquad:ibis-cli:0.7 -DoutputDirectory=.
+
+and run it on text and XML files:
+
+    java -jar ibis-cli-0.7.jar [options] <file>...
+
+    --words <file>    Accept the words in <file> too, one per line,
+                      gzipped or not. Give it once for each word list.
+    --skip <element>  Leave out the text of XML elements with this local
+                      name, such as DocBook's info. Give it once for
+                      each element.
+    --help            Show the help.
+    --version         Show Ibis's version.
+
+It checks a file whose name ends in `.xml` as XML, and any other as
+UTF-8 text. It reports each misspelling on a line of its own, in GNU's
+format for messages, so that an editor such as Emacs can go straight
+to it:
+
+    party.xml:3:25: forr (for, four, fore, form, fora, fort, ford, fork, far, fair)
+    party.xml:4:18: aod (and, aid, add, god, ad, ado, at, rod, nod, cod)
+
+It exits with status 1 if it found a misspelling, 2 if it couldn't
+check a file, and 0 otherwise.
+
+In an XML file, it checks the text of the elements, but not their
+attributes, comments or processing instructions. It checks the text of
+an element such as a paragraph as a whole, with the text of the
+elements within it, so that a word split by markup, such as
+`mis<emphasis>spel</emphasis>led`, isn't reported, but a space missing
+before an element's text is. It checks separately the text of elements
+that have no text of their own around them, such as table cells, and
+of two elements side by side, which are often alternatives.
+
 Internationalisation
 --------------------
 Ibis is currently fairly Anglocentric: it offers only English word
@@ -111,7 +156,7 @@ License](https://opensource.org/license/bsd-2-clause) (see
 which are all permissive: the BSD 3-Clause License, a public domain
 release, or a public domain dedication under
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-[src/main/resources/en/README.md](src/main/resources/en/README.md)
+[ibis/src/main/resources/en/README.md](ibis/src/main/resources/en/README.md)
 gives each list's source and terms.
 
 The project follows the [REUSE](https://reuse.software/)

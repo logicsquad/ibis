@@ -164,3 +164,22 @@ Initial public release.
   such as "asmade" in a link to legislation.gov.au. URLs, with a scheme
   or starting with "www.", and email addresses are now skipped whole.
   [#28](https://github.com/logicsquad/ibis/issues/28)
+
+## [0.7] - 2026-10-28
+### Added
+- Added `ibis-cli`, a command line that checks the spelling in text
+  and XML files, and reports each misspelling as
+  `file:line:column: word (suggestions)`, so that an editor such as
+  Emacs can go to it. Its jar contains everything it needs.
+  [#29](https://github.com/logicsquad/ibis/issues/29)
+
+### Changed
+- The build is now split into modules, under a parent POM,
+  `ibis-parent`. The library is still published as
+  `net.logicsquad:ibis`.
+  [#29](https://github.com/logicsquad/ibis/issues/29)
+
+### Fixed
+- Fixed the POM's licences, which didn't name the frequency list among
+  the files dedicated to the public domain under CC0 1.0.
+  [#29](https://github.com/logicsquad/ibis/issues/29)

@@ -28,6 +28,9 @@ The public API is small: `Checker`, `Dictionary` and its `Builder`,
 `Tokenizer`, `Word` and `Misspelling`. Everything else is
 package-private, so that it can change without breaking callers.
 
+The `ibis-cli` module puts a command line over the library: see
+[The command line](#the-command-line).
+
 Finding words
 -------------
 `Tokenizer` is an interface with one method, `Stream<Word>
@@ -104,9 +107,9 @@ cold JVM. After that, a new `Checker` costs almost nothing.
 
 ### Built-in word lists
 
-The English word lists are in `src/main/resources/en`, and
-[their README](../src/main/resources/en/README.md) gives each list's
-source and terms.
+The English word lists are in `ibis/src/main/resources/en`, and
+[their README](../ibis/src/main/resources/en/README.md) gives each
+list's source and terms.
 
 | List | Words | Contents |
 |---|---|---|
@@ -200,7 +203,7 @@ including those made with a `Builder`. Words not in it, such as rare
 words and most words that callers add, rank after every word that is.
 
 `SuggestionQualityTest` measures the suggestions for 251 misspellings
-in `src/test/resources/misspellings.txt`, spelling errors such as
+in `ibis/src/test/resources/misspellings.txt`, spelling errors such as
 "definately" and typing errors such as "teh", and fails if they get
 worse. The intended word comes first for 237 (94%), up from 196 (78%)
 without frequencies, and in the top ten for 245. Most of the gain is
@@ -211,15 +214,53 @@ Languages
 ---------
 Everything language-specific is chosen in one place, the
 package-private `Language` enum: the phonetic encoder, the built-in
-word lists, the frequency list, and the `Case`s for the tokenizer. `Language.of(Locale)`
-matches on `Locale.getLanguage()` alone, and throws
-`IllegalArgumentException` for a language Ibis doesn't support.
+word lists, the frequency list, and the `Case`s for the tokenizer.
+`Language.of(Locale)` matches on `Locale.getLanguage()` alone, and
+throws `IllegalArgumentException` for a language Ibis doesn't support.
 
 A `Dictionary` records its `locale()`, and `Checker(Dictionary)`
 chooses its tokenizer from it, so a caller gives a locale once, when
 building the dictionary. Only English is supported. See
 [#26](https://github.com/logicsquad/ibis/issues/26) for what another
 language would need.
+
+The command line
+----------------
+`ibis-cli` is a command line over the library, which the shade plugin
+packs with its dependencies into one jar. `Main` reads the options,
+builds a dictionary from the built-in one and any `--words` lists, and
+checks each file with a `Checker`. It reports each misspelling as
+`file:line:column: word (suggestions)`, GNU's format for messages, in
+the order they appear, and exits with status 1 if there were any, or 2
+if a file couldn't be checked.
+
+A text file is one passage of text to check. For an XML file, `XmlText`
+finds the passages:
+
+- The text of an element that has text of its own, such as a
+  paragraph, is one passage, with the text of the elements within it.
+  So a word split by markup is checked whole, and a space missing
+  before an element's text is caught.
+- Each element within an element that has no text of its own, such as
+  a cell in a table row, starts a passage of its own.
+- Two elements side by side, with no text between them, are
+  separated, since they're more often alternatives, such as text shown
+  under different conditions, than parts of one word. So is the text
+  on either side of an empty element.
+- Attributes, comments, processing instructions and the elements given
+  to `--skip` are left out.
+
+Each character of a passage records where it came from, so that a
+misspelling's line and column are right. The JDK's StAX parser parses
+the document, but the locations it reports for text run a character or
+two ahead, so a `Cursor` follows the parser through the document's text
+instead. It moves past each piece of markup that the parser reports,
+and matches each character of text with the characters it came from,
+which differ for entity references, CDATA sections and carriage
+returns. If the two ever disagree, the file is reported as unchecked,
+rather than with wrong positions. `Lines` turns an offset into a line
+and a column, counting from 1, with tab stops every 8 columns, as GNU's
+format and Emacs expect.
 
 Limitations
 -----------
@@ -235,5 +276,7 @@ Limitations
   "peice", and "nice" before "niece" for "neice".
 - **Limited suggestions:** words more than one edit away are found
   only if they sound alike, so "reccomend" doesn't get "recommend".
+- **No DTDs:** `ibis-cli` doesn't read DTDs, so it can't check an XML
+  file that uses an entity that a DTD defines, such as `&nbsp;`.
 - **No regional variants:** `en_GB` and `en_US` share one dictionary,
   which accepts both "colour" and "color".
