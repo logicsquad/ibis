@@ -25,7 +25,7 @@ as a Maven dependency:
     <dependency>
       <groupId>net.logicsquad</groupId>
       <artifactId>ibis</artifactId>
-      <version>0.6</version>
+      <version>0.7</version>
     </dependency>
 
 Ibis ships with some built-in word lists, and you can start checking
