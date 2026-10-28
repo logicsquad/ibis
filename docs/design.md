@@ -36,7 +36,7 @@ tokenize(String text)`, so a caller can supply their own.
 `DefaultTokenizer`. A `Word` records the word's text and its start
 position, as a `char` index into the original text.
 
-`DefaultTokenizer` works in four stages.
+`DefaultTokenizer` works in five stages.
 
 1. **Normalising apostrophes:** it replaces typographic apostrophes
    and look-alikes (such as `’` and `ʼ`) with `'`. Each replacement
@@ -45,13 +45,19 @@ position, as a `char` index into the original text.
 2. **Finding candidates:** a `java.text.BreakIterator` for the
    tokenizer's locale splits the text into segments. Segments are
    words, but also runs of spaces and punctuation.
-3. **Rejecting:** `Rejector` drops any candidate that:
+3. **Skipping URLs and email addresses:** it finds the URLs and email
+   addresses in the text, and drops every candidate that overlaps one,
+   so that "asmade" in
+   `https://www.legislation.gov.au/F2024L00996/asmade/text` isn't
+   checked. A URL has a scheme, such as `https://` or `mailto:`, or
+   starts with `www.`, and runs to the next whitespace.
+4. **Rejecting:** `Rejector` drops any candidate that:
    - is shorter than two characters;
    - doesn't start with a letter, which drops spaces and punctuation;
    - contains a digit;
    - is `http`, `https` or `ftp`;
    - looks like a domain name.
-4. **Handling special cases:** a `Handler` rewrites or splits what's
+5. **Handling special cases:** a `Handler` rewrites or splits what's
    left, and `Rejector` checks the results again. The handler tries
    each `Case` in turn, and the first whose predicate matches handles
    the word:

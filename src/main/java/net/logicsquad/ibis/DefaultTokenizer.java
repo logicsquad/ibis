@@ -5,7 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -15,6 +19,7 @@ import java.util.stream.Stream;
  * 
  * <ul>
  * <li>replaces problematic in-word characters;</li>
+ * <li>drops {@link Word}s within URLs and email addresses;</li>
  * <li>drops {@link Word}s rejected by its {@link Rejector}; and</li>
  * <li>potentially splits words returned by the {@link BreakIterator} into more than one {@link Word} using a {@link Handler}.</li>
  * </ul>
@@ -32,6 +37,14 @@ class DefaultTokenizer implements Tokenizer {
 	 */
 	private static final Map<Character, Character> REPLACEMENTS = Map.of('\u2018', '\'', '\u2019', '\'', '\u055A', '\'', '\uFF07', '\'', '\u07F4', '\'',
 			'\u02BC', '\'');
+
+	/**
+	 * Matches URLs and email addresses, whose parts aren't words to check: a URL with a scheme ("https://…" or "mailto:…") or starting
+	 * "www.", up to the next whitespace, or an email address. Each starts only where a run of the characters it begins with starts, so
+	 * that a long run is scanned once rather than from each of its characters.
+	 */
+	private static final Pattern URL_OR_EMAIL = Pattern
+			.compile("(?i)(?<![a-z0-9+.-])(?:[a-z][a-z0-9+.-]*://|mailto:|www\\.)\\S+|(?<![a-z0-9._%+-])[a-z0-9._%+-]+@[a-z0-9-]+(?:\\.[a-z0-9-]+)+");
 
 	/**
 	 * {@link Locale} for {@link BreakIterator}s
@@ -81,8 +94,10 @@ class DefaultTokenizer implements Tokenizer {
 	@Override
 	public Stream<Word> tokenize(String text) {
 		String cleanText = cleanupText(text);
+		NavigableMap<Integer, Integer> urlsAndEmails = urlsAndEmails(cleanText);
 		// We need to call shouldReject() again, because handler.handle() may have changed the Word
 		return candidates(cleanText).stream()
+				.filter(w -> !overlaps(w, urlsAndEmails))
 				.filter(w -> !rejector.shouldReject(w))
 				.flatMap(w -> handler.handle(w, cleanText).stream())
 				.filter(w -> !rejector.shouldReject(w));
@@ -103,5 +118,34 @@ class DefaultTokenizer implements Tokenizer {
 			result.add(new Word(text.substring(start, end), start));
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the spans of {@code text} taken up by URLs and email addresses.
+	 * 
+	 * @param text some text
+	 * @return map from the start of each URL or email address to its end
+	 * @see <a href="https://github.com/logicsquad/ibis/issues/28">#28</a>
+	 */
+	private static NavigableMap<Integer, Integer> urlsAndEmails(String text) {
+		NavigableMap<Integer, Integer> result = new TreeMap<>();
+		Matcher matcher = URL_OR_EMAIL.matcher(text);
+		while (matcher.find()) {
+			result.put(matcher.start(), matcher.end());
+		}
+		return result;
+	}
+
+	/**
+	 * Does {@code word} overlap any of {@code spans}?
+	 * 
+	 * @param word  a {@link Word}
+	 * @param spans map from the start of each span to its end, where no two spans overlap
+	 * @return {@code true} if {@code word} overlaps a span, otherwise {@code false}
+	 */
+	private static boolean overlaps(Word word, NavigableMap<Integer, Integer> spans) {
+		// Spans don't overlap, so only the last to start before the word ends can overlap it
+		Map.Entry<Integer, Integer> span = spans.lowerEntry(word.end());
+		return span != null && span.getValue() > word.start();
 	}
 }

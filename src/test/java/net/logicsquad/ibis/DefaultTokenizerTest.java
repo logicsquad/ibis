@@ -2,7 +2,9 @@ package net.logicsquad.ibis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 
@@ -96,6 +98,26 @@ public class DefaultTokenizerTest {
 	private static final List<Word> EXPECTED_ABBREVIATION_AT_END_1 = List.of(new Word("for", 0), new Word("example", 4), new Word("e.g", 13));
 	private static final String ABBREVIATION_AT_END_2 = "that is, i.e";
 	private static final List<Word> EXPECTED_ABBREVIATION_AT_END_2 = List.of(new Word("that", 0), new Word("is", 5), new Word("i.e", 9));
+
+	// URLs and email addresses, whose parts aren't words to check
+	private static final String URL_1 = "See https://www.legislation.gov.au/F2024L00996/asmade/text for details.";
+	private static final List<Word> EXPECTED_URL_1 = List.of(new Word("See", 0), new Word("for", 59), new Word("details", 63));
+	private static final String URL_2 = "Try http://example.com/path?query=abc#frag now.";
+	private static final List<String> EXPECTED_URL_2 = List.of("Try", "now");
+	private static final String URL_3 = "Visit www.oaic.gov.au/privacy/your-privacy-rights today.";
+	private static final List<String> EXPECTED_URL_3 = List.of("Visit", "today");
+	private static final String URL_4 = "(See HTTPS://EXAMPLE.COM/a), then stop.";
+	private static final List<String> EXPECTED_URL_4 = List.of("See", "then", "stop");
+	private static final String EMAIL = "Email privacy@logicsquad.net, or write to mailto:help@example.com today.";
+	private static final List<Word> EXPECTED_EMAIL = List.of(new Word("Email", 0), new Word("or", 30), new Word("write", 33), new Word("to", 39),
+			new Word("today", 66));
+
+	// A colon alone doesn't make a URL
+	private static final String COLONS = "Note:this and Note: that";
+	private static final List<String> EXPECTED_COLONS = List.of("Note", "this", "and", "Note", "that");
+
+	// A long run of the characters that URLs and email addresses are made of, which a careless pattern scans in quadratic time
+	private static final String LONG_RUN = "a.".repeat(100_000);
 
 	@Test
 	public void tokenizeThrowsOnNull() {
@@ -240,6 +262,37 @@ public class DefaultTokenizerTest {
 	@Test
 	public void forLocaleThrowsForUnsupportedLanguage() {
 		assertThrows(IllegalArgumentException.class, () -> Tokenizer.forLocale(Locale.GERMAN));
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/28
+	@Test
+	public void tokenizerSkipsUrls() {
+		testTokenizerAndWordList(URL_1, EXPECTED_URL_1);
+		testTokenizerAndStringList(URL_2, EXPECTED_URL_2);
+		testTokenizerAndStringList(URL_3, EXPECTED_URL_3);
+		testTokenizerAndStringList(URL_4, EXPECTED_URL_4);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/28
+	@Test
+	public void tokenizerSkipsEmailAddresses() {
+		testTokenizerAndWordList(EMAIL, EXPECTED_EMAIL);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/28
+	@Test
+	public void tokenizerKeepsWordsAroundColons() {
+		testTokenizerAndStringList(COLONS, EXPECTED_COLONS);
+		return;
+	}
+
+	// https://github.com/logicsquad/ibis/issues/28
+	@Test
+	public void tokenizerScansLongRunsQuickly() {
+		assertTimeoutPreemptively(Duration.ofSeconds(5), () -> testTokenizer(LONG_RUN));
 		return;
 	}
 }
