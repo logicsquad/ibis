@@ -1,9 +1,9 @@
 Word Frequencies
 ================
 
-These tools make `src/main/resources/en/frequency.txt.gz`, which lists
-the built-in dictionary's words in lower case, most common first. Ibis
-uses it to rank suggestions that are equally close to a misspelling.
+These tools make `ibis/src/main/resources/en/frequency.txt.gz`, which
+lists the built-in dictionary's words in lower case, most common first.
+Ibis uses it to rank suggestions.
 See [#27](https://github.com/logicsquad/ibis/issues/27).
 
 None of this is part of the build. Run it again only to change the
@@ -41,8 +41,8 @@ Steps
 
 3. Count the words.
 
-       mvn compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt
-       java -cp target/classes:$(cat target/classpath.txt) tools/frequency/Count.java <corpus directory> src/main/resources/en/frequency.txt.gz
+       mvn -pl ibis compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt
+       java -cp ibis/target/classes:$(cat ibis/target/classpath.txt) tools/frequency/Count.java <corpus directory> ibis/src/main/resources/en/frequency.txt.gz
 
 `Count.java` finds words with Ibis's own tokenizer, so they are counted
 as Ibis checks them, and ignores case. A word's frequency is its share
@@ -52,6 +52,6 @@ least three times.
 
 Then run the tests: `SuggestionQualityTest` reports how well
 suggestions rank the intended word for the misspellings in
-`src/test/resources/misspellings.txt`. How much frequency counts
+`ibis/src/test/resources/misspellings.txt`. How much frequency counts
 against edit distance is set by `RANK_WEIGHT` and `SOUNDS_LIKE_BONUS`
 in `Dictionary`.

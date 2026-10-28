@@ -111,7 +111,7 @@ License](https://opensource.org/license/bsd-2-clause) (see
 which are all permissive: the BSD 3-Clause License, a public domain
 release, or a public domain dedication under
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-[src/main/resources/en/README.md](src/main/resources/en/README.md)
+[ibis/src/main/resources/en/README.md](ibis/src/main/resources/en/README.md)
 gives each list's source and terms.
 
 The project follows the [REUSE](https://reuse.software/)

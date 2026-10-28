@@ -15,11 +15,11 @@ SPDX-License-Identifier = "BSD-2-Clause"
 # Word lists compiled by Logic Squad
 [[annotations]]
 path = [
-    "src/main/resources/en/words-2.txt",
-    "src/main/resources/en/names-2.txt",
-    "src/main/resources/en/acronyms.txt",
-    "src/main/resources/en/frequency.txt.gz",
-    "src/test/resources/misspellings.txt",
+    "ibis/src/main/resources/en/words-2.txt",
+    "ibis/src/main/resources/en/names-2.txt",
+    "ibis/src/main/resources/en/acronyms.txt",
+    "ibis/src/main/resources/en/frequency.txt.gz",
+    "ibis/src/test/resources/misspellings.txt",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "2025 Logic Squad"
@@ -27,14 +27,14 @@ SPDX-License-Identifier = "CC0-1.0"
 
 # 3of6game from 12dicts 6.0
 [[annotations]]
-path = "src/main/resources/en/words-1.txt.gz"
+path = "ibis/src/main/resources/en/words-1.txt.gz"
 precedence = "override"
 SPDX-FileCopyrightText = "Alan Beale"
 SPDX-License-Identifier = "LicenseRef-12dicts"
 
 # propernames from 4.4BSD-Lite, via FreeBSD
 [[annotations]]
-path = "src/main/resources/en/names-1.txt.gz"
+path = "ibis/src/main/resources/en/names-1.txt.gz"
 precedence = "override"
 SPDX-FileCopyrightText = "The Regents of the University of California"
 SPDX-License-Identifier = "BSD-3-Clause"

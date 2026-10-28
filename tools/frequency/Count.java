@@ -22,8 +22,8 @@ import net.logicsquad.ibis.Tokenizer;
  * lower case, one per line, compressed with GZip. Run with:
  *
  * <pre>
- * mvn compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt
- * java -cp target/classes:$(cat target/classpath.txt) tools/frequency/Count.java &lt;corpus directory&gt; src/main/resources/en/frequency.txt.gz
+ * mvn -pl ibis compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt
+ * java -cp ibis/target/classes:$(cat ibis/target/classpath.txt) tools/frequency/Count.java &lt;corpus directory&gt; ibis/src/main/resources/en/frequency.txt.gz
  * </pre>
  *
  * Each subdirectory of the corpus directory is a source. Words are found with Ibis's own {@link Tokenizer}, so they are counted as Ibis

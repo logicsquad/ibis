@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- The modules' URLs and SCM are the project's own, rather than the parent's with each module's name appended. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  child.project.url.inherit.append.path="false">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>net.logicsquad</groupId>
-  <artifactId>ibis</artifactId>
+  <artifactId>ibis-parent</artifactId>
   <version>0.7-SNAPSHOT</version>
-  <name>Ibis</name>
-  <description>A simple spell checker for Java applications.</description>
+  <packaging>pom</packaging>
+  <name>Ibis parent</name>
+  <description>Ibis, a simple spell checker for Java applications, and its command line.</description>
   <url>https://github.com/logicsquad/ibis</url>
   <inceptionYear>2025</inceptionYear>
 
@@ -33,7 +36,7 @@
       <name>CC0 1.0 Universal</name>
       <url>https://creativecommons.org/publicdomain/zero/1.0/</url>
       <distribution>repo</distribution>
-      <comments>The built-in word lists en/words-2.txt, en/names-2.txt and en/acronyms.txt. See en/README.md in the jar.</comments>
+      <comments>The built-in word lists en/words-2.txt, en/names-2.txt and en/acronyms.txt, and the frequency list en/frequency.txt.gz. See en/README.md in the jar.</comments>
     </license>
     <license>
       <name>Public Domain (12dicts)</name>
@@ -53,16 +56,24 @@
     </developer>
   </developers>
 
-  <scm>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false"
+    child.scm.url.inherit.append.path="false">
     <connection>scm:git:git://github.com/logicsquad/ibis.git</connection>
     <developerConnection>scm:git:ssh://github.com:logicsquad/ibis.git</developerConnection>
     <url>https://github.com/logicsquad/ibis/tree/master</url>
   </scm>
 
+  <modules>
+    <module>ibis</module>
+  </modules>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
+    <commons-codec.version>1.18.0</commons-codec.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <log4j.version>2.24.3</log4j.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <central-publishing-maven-plugin.version>0.12.0</central-publishing-maven-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
@@ -106,12 +117,13 @@
   </profiles>
 
   <build>
+    <!-- Every jar carries the licence texts in its META-INF. -->
     <resources>
       <resource>
         <directory>src/main/resources</directory>
       </resource>
       <resource>
-        <directory>${project.basedir}</directory>
+        <directory>${project.basedir}/..</directory>
         <targetPath>META-INF</targetPath>
         <includes>
           <include>LICENSE</include>
@@ -259,6 +271,21 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>${commons-codec.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j2-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>5.13.1</version>
@@ -267,28 +294,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <dependencies>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.18.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>2.0.17</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j2-impl</artifactId>
-      <version>2.24.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 </project>

@@ -104,9 +104,9 @@ cold JVM. After that, a new `Checker` costs almost nothing.
 
 ### Built-in word lists
 
-The English word lists are in `src/main/resources/en`, and
-[their README](../src/main/resources/en/README.md) gives each list's
-source and terms.
+The English word lists are in `ibis/src/main/resources/en`, and
+[their README](../ibis/src/main/resources/en/README.md) gives each
+list's source and terms.
 
 | List | Words | Contents |
 |---|---|---|
@@ -200,7 +200,7 @@ including those made with a `Builder`. Words not in it, such as rare
 words and most words that callers add, rank after every word that is.
 
 `SuggestionQualityTest` measures the suggestions for 251 misspellings
-in `src/test/resources/misspellings.txt`, spelling errors such as
+in `ibis/src/test/resources/misspellings.txt`, spelling errors such as
 "definately" and typing errors such as "teh", and fails if they get
 worse. The intended word comes first for 237 (94%), up from 196 (78%)
 without frequencies, and in the top ten for 245. Most of the gain is
