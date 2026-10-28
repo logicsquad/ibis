@@ -140,3 +140,27 @@ Initial public release.
 - Fixed the documented source and licence of the built-in proper
   names list, which comes from 4.4BSD-Lite under the BSD 3-Clause
   License. [#25](https://github.com/logicsquad/ibis/issues/25)
+
+## [0.6] - 2026-10-28
+### Added
+- Added a word frequency list, the 30,000 most common built-in words,
+  which Ibis uses to rank suggestions. It was counted from public
+  domain texts by the tools in `tools/frequency`, and is dedicated to
+  the public domain under CC0 1.0.
+  [#27](https://github.com/logicsquad/ibis/issues/27)
+
+### Changed
+- Suggestions are now ordered by a score that weighs each one's edit
+  distance against how common it is, and whether it sounds like the
+  misspelling. The intended word comes first for 94% of the 251
+  misspellings in `SuggestionQualityTest`, up from 78%, and "the" now
+  comes first for "teh" rather than 8th.
+  [#27](https://github.com/logicsquad/ibis/issues/27)
+- `http`, `https` and `ftp` outside a URL are now checked like any
+  other word. [#28](https://github.com/logicsquad/ibis/issues/28)
+
+### Fixed
+- Fixed the parts of URLs and email addresses being checked as words,
+  such as "asmade" in a link to legislation.gov.au. URLs, with a scheme
+  or starting with "www.", and email addresses are now skipped whole.
+  [#28](https://github.com/logicsquad/ibis/issues/28)
