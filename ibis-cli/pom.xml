@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>net.logicsquad</groupId>
+    <artifactId>ibis-parent</artifactId>
+    <version>0.7-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>ibis-cli</artifactId>
+  <name>Ibis command line</name>
+  <description>Checks the spelling in text and XML files from the command line, with Ibis.</description>
+
+  <!-- The jar contains Ibis, Commons Codec and SLF4J too. -->
+  <licenses>
+    <license>
+      <name>2-Clause BSD License</name>
+      <url>https://opensource.org/licenses/BSD-2-Clause</url>
+      <distribution>repo</distribution>
+      <comments>Ibis and its command line. See META-INF/LICENSE in the jar.</comments>
+    </license>
+    <license>
+      <name>3-Clause BSD License</name>
+      <url>https://opensource.org/license/bsd-3-clause</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word list en/names-1.txt.gz. See en/README.md in the jar.</comments>
+    </license>
+    <license>
+      <name>CC0 1.0 Universal</name>
+      <url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word lists en/words-2.txt, en/names-2.txt and en/acronyms.txt, and the frequency list en/frequency.txt.gz. See en/README.md in the jar.</comments>
+    </license>
+    <license>
+      <name>Public Domain (12dicts)</name>
+      <url>http://wordlist.aspell.net/12dicts-readme/</url>
+      <distribution>repo</distribution>
+      <comments>The built-in word list en/words-1.txt.gz. See en/README.md in the jar.</comments>
+    </license>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+      <comments>Apache Commons Codec. See META-INF/LICENSE.txt and META-INF/NOTICE.txt in the jar.</comments>
+    </license>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+      <distribution>repo</distribution>
+      <comments>SLF4J. See META-INF/LICENSE.txt in the jar.</comments>
+    </license>
+  </licenses>
+
+  <dependencies>
+    <dependency>
+      <groupId>net.logicsquad</groupId>
+      <artifactId>ibis</artifactId>
+    </dependency>
+    <!-- Ibis logs only failures that the command line reports itself. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>net.logicsquad.ibis.cli.Main</mainClass>
+                  <manifestEntries>
+                    <Implementation-Title>ibis</Implementation-Title>
+                    <Implementation-Version>${project.version}</Implementation-Version>
+                  </manifestEntries>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <!-- Keeps every dependency's licence and notice, one after another. -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/LICENSE</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/LICENSE.txt</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/NOTICE</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/NOTICE.txt</resource>
+                </transformer>
+              </transformers>
+              <filters>
+                <!-- The command line's own copies are the same. -->
+                <filter>
+                  <artifact>net.logicsquad:ibis</artifact>
+                  <excludes>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/LICENSES/**</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/versions/9/module-info.class</exclude>
+                    <exclude>module-info.class</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
