@@ -19,7 +19,7 @@ as a Maven dependency:
     <dependency>
       <groupId>net.logicsquad</groupId>
       <artifactId>ibis</artifactId>
-      <version>0.5</version>
+      <version>0.6</version>
     </dependency>
 
 Ibis ships with some built-in word lists, and you can start checking
@@ -34,10 +34,11 @@ text against a `Dictionary` containing these words:
 A `Misspelling` contains the incorrect `Word`, which holds its text and
 start position in the original text, and up to 10 suggestions, which
 may be empty. Suggestions are words in the dictionary that are one
-edit away from the misspelling, or that sound like it, closest first:
+edit away from the misspelling, or that sound like it, closest and
+most common first:
 
-    Misspelling[word=Word[text=forr, start=16], suggestions=[for, fora, fore...
-    Misspelling[word=Word[text=aod, start=49], suggestions=[ad, add, ado, aid...
+    Misspelling[word=Word[text=forr, start=16], suggestions=[for, four, fore...
+    Misspelling[word=Word[text=aod, start=49], suggestions=[and, aid, add...
 
 A `Checker` is immutable and thread-safe, so you can create one and use
 it to check any number of texts.

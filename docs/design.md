@@ -36,7 +36,7 @@ tokenize(String text)`, so a caller can supply their own.
 `DefaultTokenizer`. A `Word` records the word's text and its start
 position, as a `char` index into the original text.
 
-`DefaultTokenizer` works in four stages.
+`DefaultTokenizer` works in five stages.
 
 1. **Normalising apostrophes:** it replaces typographic apostrophes
    and look-alikes (such as `’` and `ʼ`) with `'`. Each replacement
@@ -45,13 +45,18 @@ position, as a `char` index into the original text.
 2. **Finding candidates:** a `java.text.BreakIterator` for the
    tokenizer's locale splits the text into segments. Segments are
    words, but also runs of spaces and punctuation.
-3. **Rejecting:** `Rejector` drops any candidate that:
+3. **Skipping URLs and email addresses:** it finds the URLs and email
+   addresses in the text, and drops every candidate that overlaps one,
+   so that "asmade" in
+   `https://www.legislation.gov.au/F2024L00996/asmade/text` isn't
+   checked. A URL has a scheme, such as `https://` or `mailto:`, or
+   starts with `www.`, and runs to the next whitespace.
+4. **Rejecting:** `Rejector` drops any candidate that:
    - is shorter than two characters;
    - doesn't start with a letter, which drops spaces and punctuation;
    - contains a digit;
-   - is `http`, `https` or `ftp`;
    - looks like a domain name.
-4. **Handling special cases:** a `Handler` rewrites or splits what's
+5. **Handling special cases:** a `Handler` rewrites or splits what's
    left, and `Rejector` checks the results again. The handler tries
    each `Case` in turn, and the first whose predicate matches handles
    the word:
@@ -155,24 +160,58 @@ The edit distance is the optimal string alignment distance, in
 adjacent characters, so "wierd" is one edit from "weird". Ibis
 compares both words in lower case.
 
-Suggestions are ordered by:
+Suggestions are ordered by a score, lowest first:
 
-1. edit distance;
-2. words that sound like the misspelling before those that don't;
-3. alphabetically.
+    score = distance + 0.15 × ln(rank) − (0.4 if it sounds alike)
+
+where `rank` is the word's place in the language's frequency list,
+from 1 for the most common, and one past the end for words not in it.
+A word's probability is roughly proportional to the inverse of its
+rank (Zipf's law), so this weighs how close a suggestion is against how
+unlikely it is, as a noisy channel model would. Distance still matters
+most: one more edit costs as much as being about 800 times less
+common, and sounding alike as much as being about 14 times less
+common. So "the" comes first for "teh", ahead of "tea", which sounds
+alike but is rarer. Words with the same score are ordered
+alphabetically.
 
 Words that differ only in case, such as "Ward" and "ward", are
 suggested once, in lower case if the dictionary has that form, since
 that form is also correct with an initial capital.
 
-Across 60 common misspellings, the intended word comes first for 49,
-and in the top ten for 58.
+### Word frequencies
+
+The frequency list, `frequency.txt.gz`, holds the 30,000 most common
+built-in words, in lower case, most common first. It was counted from
+public domain texts, by the tools in
+[`tools/frequency`](../tools/frequency/README.md):
+
+- 310 Project Gutenberg books, 19 million words: 150 works of
+  literature, and the rest from across the other Library of Congress
+  classes; and
+- the US Compilation of Presidential Documents for 2019 and 2024,
+  2.7 million words of modern English: statements, remarks,
+  interviews and press conferences.
+
+Each source counts equally, whatever its size, so the older English of
+the books doesn't swamp the modern. `Dictionary` loads a language's
+list once, on first use, and shares it between all its dictionaries,
+including those made with a `Builder`. Words not in it, such as rare
+words and most words that callers add, rank after every word that is.
+
+`SuggestionQualityTest` measures the suggestions for 251 misspellings
+in `src/test/resources/misspellings.txt`, spelling errors such as
+"definately" and typing errors such as "teh", and fails if they get
+worse. The intended word comes first for 237 (94%), up from 196 (78%)
+without frequencies, and in the top ten for 245. Most of the gain is
+in typing errors, where the intended word comes first for 95 of 99, up
+from 63: "the" was 8th for "teh", and "and" 8th for "adn".
 
 Languages
 ---------
 Everything language-specific is chosen in one place, the
 package-private `Language` enum: the phonetic encoder, the built-in
-word lists, and the `Case`s for the tokenizer. `Language.of(Locale)`
+word lists, the frequency list, and the `Case`s for the tokenizer. `Language.of(Locale)`
 matches on `Locale.getLanguage()` alone, and throws
 `IllegalArgumentException` for a language Ibis doesn't support.
 
@@ -191,10 +230,9 @@ Limitations
 - **Lenient case:** a word stored in lower case or with an initial
   capital is correct in any mix of cases, so "tHe" and "australian"
   are correct.
-- **No word frequency:** the built-in lists don't record how common
-  each word is, so ties are broken alphabetically. For a short word,
-  where many words are one edit away, the intended word can rank
-  lower: "the" is 8th for "teh".
+- **Ambiguous misspellings:** frequency can't tell which of two
+  equally close words was meant, so "peace" comes before "piece" for
+  "peice", and "nice" before "niece" for "neice".
 - **Limited suggestions:** words more than one edit away are found
   only if they sound alike, so "reccomend" doesn't get "recommend".
 - **No regional variants:** `en_GB` and `en_US` share one dictionary,

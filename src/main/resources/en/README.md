@@ -52,3 +52,15 @@ are in the `LICENSES` directory of the Ibis repository, and in
 - **Terms:** dedicated to the public domain under
   [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
   (`CC0-1.0`).
+
+`frequency.txt`
+---------------
+- **Source:** the 30,000 most common words of the other lists, in
+  lower case, most common first, compiled by Logic Squad by counting
+  the words in public domain texts: Project Gutenberg books, and the
+  US Compilation of Presidential Documents for 2019 and 2024. Ibis
+  uses it to rank suggestions. The tools and the method are in
+  `tools/frequency` in the Ibis repository.
+- **Terms:** dedicated to the public domain under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (`CC0-1.0`).
